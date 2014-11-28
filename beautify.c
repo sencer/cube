@@ -5,7 +5,7 @@
 void usage()
 {
   printf("Usage:\n");
-  printf(" beautify infile outfile [threshold = 4 bohr]\n");
+  printf(" beautify infile outfile [threshold = 3 bohr]\n");
   printf(" threshold: the maximum distance to shift the data");
 }
 int main(int argc, char *argv[])
@@ -25,17 +25,18 @@ int main(int argc, char *argv[])
   }
   else
   {
-    thr = 4;
+    thr = 3;
   }
 
   Cube *c = CubeRead(argv[1]);
 
-  // looking one way, for now (+x, +y, +z, not -x, -y, -z)
   for (i = 0; i < 3; ++i)
   {
     dim = CubeDataSize(c)/c->ngrid[i];
     for (j = 0; j < c->ngrid[i]; ++j)
     {
+
+      // positive direction
       ind = LayerIndices(c, i, j);
       sum = 0;
       for (k = 0; k < dim; ++k)
@@ -46,10 +47,23 @@ int main(int argc, char *argv[])
         min[i] = sum;
         min_i[i] = j;
       }
+      free(ind);
+      // negative direction
+      ind = LayerIndices(c, i, c->ngrid[i]-j-1);
+      sum = 0;
+      for (k = 0; k < dim; ++k)
+      {
+        sum += fabs(c->data[ind[k]]);
+      }
+      if(sum < min[i]) {
+        min[i] = sum;
+        min_i[i] = -j;
+      }
       if (j * c->vsize[i] > thr )
       {
         break;
       }
+      free(ind);
     }
     CubeRotateLayers(c, i, -1 * min_i[i]);
   }
