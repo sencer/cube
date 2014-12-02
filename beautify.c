@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
       }
       if(sum < min[i]) {
         min[i] = sum;
-        min_i[i] = -j;
+        min_i[i] = -j-1;
       }
       free(ind);
       if (j * c->vsize[i] > thr )
