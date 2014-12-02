@@ -59,11 +59,11 @@ int main(int argc, char *argv[])
         min[i] = sum;
         min_i[i] = -j;
       }
+      free(ind);
       if (j * c->vsize[i] > thr )
       {
         break;
       }
-      free(ind);
     }
     CubeRotateLayers(c, i, -1 * min_i[i]);
   }
