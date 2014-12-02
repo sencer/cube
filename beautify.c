@@ -5,7 +5,7 @@
 void usage()
 {
   printf("Usage:\n");
-  printf(" beautify infile outfile [threshold = 3 bohr]\n");
+  printf(" beautify infile outfile [threshold = 2 bohr]\n");
   printf(" threshold: the maximum distance to shift the data");
 }
 int main(int argc, char *argv[])
@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
   }
   else
   {
-    thr = 3;
+    thr = 2;
   }
 
   Cube *c = CubeRead(argv[1]);
