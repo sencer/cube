@@ -42,15 +42,17 @@ int CubeDataSize(Cube *cube);                    // return the number of data po
 double CubeVVolume(Cube *cube);                  // return volume of a single Voxes in Bohr^3
 double CubeVolume(Cube *cube);                   // return total volume in Bohr^3
 
-Layer *LayerInit(int d1, int d2);                 // allocate a Layer
-Layer *CubeGetLayer(Cube *cube, int dir, int n);  // get nth Layer of a Cube, normal to 0:x 1:y 2:z direction
+int *CubeRegionIndices(Cube *cube, int *p, int *r);
+Cube *CubeGetRegion(Cube *cube, int *p, int *r);
+void CubePutRegion(Cube *dest, Cube *source, int *p);
+
 int *LayerIndices(Cube *cube, int dir, int n);    // get indices of the nth Layer normal to x/y/z direction
-void CubePutLayer(Cube *cube, Layer *layer, int dir, int n); // put a layer into specified location in Cube
+Cube *CubeGetLayer(Cube *cube, int dir, int n);
+void CubePutLayer(Cube *dest, Cube *source, int dir, int n);
 double CubeRotateLayers(Cube *cube, int dir, int n); // rotate all the layers in direction dir n times
                                                      // returns the amount origin is shifted to keep everything
                                                      // in place wrt Atoms
 
-void LayerDelete(Layer *layer);                      // free the memory allocated for a Layer
 
 void CubeMoveAtoms(Cube *cube, int dir, double r);  // move all atoms in direction dir r-much.
 

@@ -74,46 +74,38 @@ double CubeVolume(Cube *cube)
   return CubeDataSize(cube) * CubeVVolume(cube);
 }
 
-Layer *LayerInit(int d0, int d1)
+Cube *CubeGetRegion(Cube *cube, int *p, int *r)
 {
-  int i;
-  Layer *layer = malloc(sizeof(Layer));
-  layer->size = d0 * d1;
-  layer->dim[0] = d0;
-  layer->dim[1] = d1;
-  layer->data = malloc(d0 * sizeof(double*));
-  for (i = 0; i < d0; ++i)
-  {
-    layer->data[i] = malloc(d1 * sizeof(double));
+  int *indices = CubeRegionIndices(cube, p, r),
+      d[3] = { r[0] - p[0] + 1, r[1] - p[1] + 1, r[2] - p[2] + 1 },
+      dim = d[0] * d[1] * d[2],
+      i;
+  Cube *c = CubeInit(0, d);
+  for(i = 0; i < 3; i++) {
+    c->origin[i] = cube->origin[i] + p[i] * cube->vsize[i];
+    c->vsize[i] = cube->vsize[i];
   }
-  return layer;
+  for(i=0; i<dim; i++)
+  {
+    c->data[i] = cube->data[indices[i]];
+  }
+  free(indices);
+  return c;
 }
 
-Layer *CubeGetLayer(Cube *cube, int dir, int n)
+void CubePutRegion(Cube *dest, Cube *source, int *p)
 {
-/* Somewhat unnaturally
- * dir 0 gets x-planes as y-z
- * dir 1 gets y-planes as x-z
- * dir 2 gets z-planes as x-y
- * n for n-th plane
- */
-  int i, j;
-  Layer *layer;
-  int d[] = { cube->ngrid[0], cube->ngrid[1], cube->ngrid[2] };
-  switch (dir) {
-    case 0:
-      layer = LayerInit(d[1], d[2]);
-
-      for (i = 0; i < d[1]; ++i)
-      {
-        memcpy(layer->data[i], &(cube->data[i*d[2]+n*d[2]*d[1]]), d[2]*sizeof(double));
-      }
-
-      break;
-
-    case 1:
-
-      layer = LayerInit(d[0], d[2]);
+  int dim = CubeDataSize(source),
+      r[3] = { p[0]+source->ngrid[0]-1,
+               p[1]+source->ngrid[1]-1,
+               p[2]+source->ngrid[2]-1 },
+      *indices = CubeRegionIndices(dest, p, r), i;
+  for( i = 0; i < dim; i++ )
+  {
+    dest->data[indices[i]] = source->data[i];
+  }
+  free(indices);
+}
 
 int *CubeRegionIndices(Cube *cube, int *p, int *r)
 {
@@ -126,59 +118,36 @@ int *CubeRegionIndices(Cube *cube, int *p, int *r)
     for( y = 0; y < d[1] ; y++ ){
       for( z = 0; z < d[2] ; z++ ){
         indices[d[2]*d[1]*x+d[2]*y+z] = c[2] * c[1] * (x + p[0]) + c[2] * (y + p[1]) + z + p[2];
-      for (i = 0; i < d[0]; ++i)
-      {
-        memcpy(layer->data[i], &(cube->data[n*d[2]+i*d[1]*d[2]]), d[2]*sizeof(double));
       }
     }
   }
 
-      break;
-
-    case 2:
-
-      layer = LayerInit(d[0], d[1]);
-
-      for (i = 0; i < d[0]; ++i)
-      {
-        for (j = 0; j < d[1]; ++j)
-        {
-          layer->data[i][j] = cube->data[n + d[2] * j + i * d[1] * d[2]];
-        }
-      }
-
-      break;
-  }
-  return layer;
+  return indices;
 }
 
-void CubePutLayer(Cube *cube, Layer *layer, int dir, int n)
+int *LayerIndices(Cube *cube, int dir, int n)
 {
-  int i, j;
-  int d[] = { cube->ngrid[0], cube->ngrid[1], cube->ngrid[2] };
-  switch (dir) {
-    case 0:
-      for (i = 0; i < d[1]; ++i)
-      {
-        memcpy(&(cube->data[i*d[2]+n*d[2]*d[1]]), layer->data[i], d[2]*sizeof(double));
-      }
-      break;
-    case 1:
-      for (i = 0; i < d[0]; ++i)
-      {
-        memcpy(&(cube->data[n*d[2]+i*d[1]*d[2]]), layer->data[i], d[2]*sizeof(double));
-      }
-      break;
-    case 2:
-      for (i = 0; i < d[0]; ++i)
-      {
-        for (j = 0; j < d[1]; ++j)
-        {
-          cube->data[n + d[2] * j + i * d[1] * d[2]] = layer->data[i][j];
-        }
-      }
-      break;
-  }
+  int p[3] = {0, 0, 0},
+      r[3] = {cube->ngrid[0]-1, cube->ngrid[1]-1, cube->ngrid[2]-1};
+  p[dir] = n;
+  r[dir] = n;
+  return CubeRegionIndices(cube, p, r);
+}
+
+Cube *CubeGetLayer(Cube *cube, int dir, int n)
+{
+  int p[3] = {0, 0, 0},
+      r[3] = {cube->ngrid[0]-1, cube->ngrid[1]-1, cube->ngrid[2]-1};
+  p[dir] = n;
+  r[dir] = n;
+  return CubeGetRegion(cube, p, r);
+}
+
+void CubePutLayer(Cube *dest, Cube *source, int dir, int n)
+{
+  int p[3] = {0, 0, 0};
+  p[dir] = n;
+  CubePutRegion(dest, source, p);
 }
 
 double CubeRotateLayers(Cube *cube, int dir, int n)
@@ -223,54 +192,6 @@ void CubeMoveAtoms(Cube *cube, int dir, double r)
   {
     cube->atoms[i].coor[dir] += r;
   }
-}
-
-void LayerDelete(Layer *layer)
-{
-  int i;
-  for (i = 0; i < layer->dim[0]; ++i)
-  {
-    free(layer->data[i]);
-  }
-  free(layer->data);
-  free(layer);
-}
-
-int *LayerIndices(Cube *cube, int dir, int n)
-{
-  int i, j;
-  int d[] = { cube->ngrid[0], cube->ngrid[1], cube->ngrid[2] };
-  int *indices = malloc(d[0] * d[1] * d[2] / d[dir] * sizeof(int));
-  switch (dir) {
-    case 0:
-      for (i = 0; i < d[1]; ++i)
-      {
-        for (j = 0; j < d[2]; ++j)
-        {
-          indices[i * d[2] + j] = i * d[2] + n * d[2] * d[1] + j;
-        }
-      }
-      break;
-    case 1:
-      for (i = 0; i < d[0]; ++i)
-      {
-        for (j = 0; j < d[2]; ++j)
-        {
-          indices[i * d[2] + j] = n * d[2] + i * d[1] * d[2] + j;
-        }
-      }
-      break;
-    case 2:
-      for (i = 0; i < d[0]; ++i)
-      {
-        for (j = 0; j < d[1]; ++j)
-        {
-          indices[i * d[1] + j] = n + d[2] * j + i * d[1] * d[2];
-        }
-      }
-      break;
-  }
-  return indices;
 }
 
 Cube *CubeRead(char* filename)
