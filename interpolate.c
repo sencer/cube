@@ -34,6 +34,11 @@ int main(int argc, char *argv[])
     {
       double w = 1.0 * k / (nimage + 1);
 
+      for (i = 0; i < 3; ++i)
+      {
+        image->origin[i] = linear(first->origin[i], last->origin[i], w);
+      }
+
       for(i = 0; i < first->nat; i++)
       {
         image->atoms[i].Z = first->atoms[i].Z;
