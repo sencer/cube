@@ -74,6 +74,24 @@ double CubeVolume(Cube *cube)
   return CubeDataSize(cube) * CubeVVolume(cube);
 }
 
+int *CubeRegionIndices(Cube *cube, int *p, int *r)
+{
+  int c[] = { cube->ngrid[0], cube->ngrid[1], cube->ngrid[2] },
+      d[] = { r[0] - p[0] + 1,  r[1] - p[1] + 1 ,  r[2] - p[2] + 1  },
+     *indices = malloc( d[0] * d[1] * d[2] * sizeof(int)),
+     x, y, z;
+
+  for( x = 0; x < d[0] ; x++ ){
+    for( y = 0; y < d[1] ; y++ ){
+      for( z = 0; z < d[2] ; z++ ){
+        indices[d[2]*d[1]*x+d[2]*y+z] = c[2] * c[1] * (x + p[0]) + c[2] * (y + p[1]) + z + p[2];
+      }
+    }
+  }
+
+  return indices;
+}
+
 Cube *CubeGetRegion(Cube *cube, int *p, int *r)
 {
   int *indices = CubeRegionIndices(cube, p, r),
@@ -107,23 +125,6 @@ void CubePutRegion(Cube *dest, Cube *source, int *p)
   free(indices);
 }
 
-int *CubeRegionIndices(Cube *cube, int *p, int *r)
-{
-  int c[] = { cube->ngrid[0], cube->ngrid[1], cube->ngrid[2] },
-      d[] = { r[0] - p[0] + 1,  r[1] - p[1] + 1 ,  r[2] - p[2] + 1  },
-     *indices = malloc( d[0] * d[1] * d[2] * sizeof(int)),
-     x, y, z;
-
-  for( x = 0; x < d[0] ; x++ ){
-    for( y = 0; y < d[1] ; y++ ){
-      for( z = 0; z < d[2] ; z++ ){
-        indices[d[2]*d[1]*x+d[2]*y+z] = c[2] * c[1] * (x + p[0]) + c[2] * (y + p[1]) + z + p[2];
-      }
-    }
-  }
-
-  return indices;
-}
 
 int *LayerIndices(Cube *cube, int dir, int n)
 {
