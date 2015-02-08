@@ -1,20 +1,18 @@
 # makefile for APC524 HW1
 CC=gcc
-CFLAGS= -lm -O3 -Wall -pedantic -std=c99
+CFLAGS= -lm -O3 -Wall -pedantic -std=c99 -fopenmp
 # CFLAGS= -lm -g -Wall -pedantic -std=c99
-EXEC = interpolate beautify test trim
+EXEC = interpolate beautify test trim binary interp2
 DEPS = cube.o
 
 .PHONY: all
 
-all: interpolate beautify test trim
+all: $(EXEC)
 
-test: $(DEPS)
-beautify: $(DEPS)
-interpolate: $(DEPS)
-trim: $(DEPS)
+$(EXEC): $(DEPS)
+	$(CC) $@.c $(DEPS) $(CFLAGS) -o $@
 
-%.o:%.c cube.h layer.c
+%.o:%.c cube.h
 	$(CC) $(CFLAGS) -c $<
 
 clean:
