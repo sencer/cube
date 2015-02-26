@@ -12,7 +12,7 @@ typedef struct atom {
 typedef struct cube_data{
   int nat,                         // number of atoms
       ngrid[3];                    // number of grid points
-  double vsize[3],                 // voxel widths
+  double vsize[3][3],              // voxel widths
          origin[3];                // location of origin (wrt coordinate system
   double *data;                    // of the atoms)
   Atom *atoms;                     // atoms as in Atom.
@@ -33,10 +33,10 @@ void CubeDelete(Cube *cube);                 // free the space used for Cube dat
 void CubeWrite(Cube *cube, char *filename);  // write Cube into a file
 
 
-void CubeCopyData(Cube *dest, Cube *source);     // copy volumetric data from a Cube to another
-void CubeCopyAtoms(Cube *dest, Cube *source);    // copy atoms from a Cube to another
-void CubeSetVoxels(Cube *dest, double *vsize);   // set voxel sizes of a Cube, only orthorhombic implemented
-void CubeSetOrigin(Cube *dest, double *origin);  // set origin of Cube data
+void CubeCopyData(Cube *dest, Cube *source);          // copy volumetric data from a Cube to another
+void CubeCopyAtoms(Cube *dest, Cube *source);         // copy atoms from a Cube to another
+void CubeSetVoxels(Cube *dest, double vsize[3][3]);   // set voxel sizes of a Cube
+void CubeSetOrigin(Cube *dest, double *origin);       // set origin of Cube data
 
 int CubeDataSize(Cube *cube);                    // return the number of data points of Cube
 double CubeVVolume(Cube *cube);                  // return volume of a single Voxes in Bohr^3
@@ -49,10 +49,9 @@ void CubePutRegion(Cube *dest, Cube *source, int *p);
 int *LayerIndices(Cube *cube, int dir, int n);    // get indices of the nth Layer normal to x/y/z direction
 Cube *CubeGetLayer(Cube *cube, int dir, int n);
 void CubePutLayer(Cube *dest, Cube *source, int dir, int n);
-double CubeRotateLayers(Cube *cube, int dir, int n); // rotate all the layers in direction dir n times
+void CubeRotateLayers(Cube *cube, int dir, int n); // rotate all the layers in direction dir n times
                                                      // returns the amount origin is shifted to keep everything
                                                      // in place wrt Atoms
-
 
 void CubeMoveAtoms(Cube *cube, int dir, double r);  // move all atoms in direction dir r-much.
 

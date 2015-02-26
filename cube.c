@@ -6,6 +6,11 @@
 
 Cube *CubeInit(int nat, int* ngrid)
 {
+  /* @brief Allocates the memory needed for a Cube
+   * @p int nat number of atoms
+   * @p int[3] ngrid, number of grid points in 0,1,2=x,y,z directions
+   * @return Cube with no data & atoms. Neither they are set to 0.
+   */
   Cube *cube = malloc(sizeof(Cube));
   cube->atoms = malloc(nat * sizeof(Atom));
   cube->data = malloc(ngrid[0] * ngrid[1] * ngrid[2] * sizeof(double));
@@ -18,6 +23,11 @@ Cube *CubeInit(int nat, int* ngrid)
 
 Cube *CubeInitFrom(Cube *cube)
 {
+  /* @brief Initialize a Cube with same nat, ngrid, vsize, origin  with @p cube
+   * @p Cube *cube the Cube to copy nat etc from
+   * @return Cube new cube with empty atoms list and no data
+   * data isn't set to 0 either!
+   */
   Cube *newCube = CubeInit(cube->nat, cube->ngrid);
   CubeSetVoxels(newCube, cube->vsize);
   memcpy(newCube->origin, cube->origin, 3 * sizeof(double));
@@ -26,6 +36,10 @@ Cube *CubeInitFrom(Cube *cube)
 
 Cube *CubeCopy(Cube *cube)
 {
+  /* @brief Copy @p cube exactly
+   * @p Cube *cube Cube to copy
+   * @return Cube new Cube, same with @p cube
+   */
   Cube *newCube = CubeInitFrom(cube);
   CubeCopyAtoms(newCube, cube);
   CubeCopyData(newCube, cube);
@@ -34,6 +48,9 @@ Cube *CubeCopy(Cube *cube)
 
 void CubeDelete(Cube *cube)
 {
+  /* @brief free the memory allocated for @p cube
+   * @p Cube *cube Cube to be deleted
+   */
   free(cube->atoms);
   free(cube->data);
   free(cube);
@@ -41,45 +58,87 @@ void CubeDelete(Cube *cube)
 
 void CubeCopyAtoms(Cube *dest, Cube *source)
 {
+  /* @brief Copy atoms from a Cube to another
+   * @p Cube dest   The cube to be copied to
+   * @p Cube source The cube to be copied from
+   */
   memcpy(dest->atoms, source->atoms, source->nat * sizeof(Atom));
 }
 
 void CubeCopyData(Cube *dest, Cube *source)
 {
+  /* @brief Copy grid data from a Cube to another
+   * @p Cube dest   The cube to be copied to
+   * @p Cube source The cube to be copied from
+   */
   memcpy(dest->data, source->data, CubeDataSize(source) * sizeof(double));
 }
 
-void CubeSetVoxels(Cube *dest, double *vsize)
+void CubeSetVoxels(Cube *dest, double vsize[3][3])
 {
-  memcpy(dest->vsize, vsize, 3 * sizeof(double));
+  /* @brief Set voxel size of a cube
+   * @p Cube dest   The cube to apply new voxel sizes
+   * @p double[3][3] vsize an array of length = 3, containing new voxel sizes
+   */
+  memcpy(dest->vsize, vsize, 3 * sizeof(dest->vsize));
 }
 
 void CubeSetOrigin(Cube *dest, double *origin)
 {
+  /* @brief Set origin for the data in the Cube file wrt origin for the atoms
+   * @p Cube dest   The cube to apply new coordinates for the
+   * @p double[3] origin an array of length = 3, containing the new origin
+   */
   memcpy(dest->origin, origin, 3 * sizeof(double));
 }
 
 int CubeDataSize(Cube *cube)
 {
+  /* @brief a helper method that returns the number of data points kept
+   * in the Cube. To find the actual size in memory, multiply with
+   * sizeof(double)
+   * @p Cube *cube
+   * @return int size
+   */
   return cube->ngrid[0] * cube->ngrid[1] * cube->ngrid[2];
 }
 
+// TODO Won't work if one of the lattice parameters does not contain two 
+// zero elements. Although that is unusual.
 double CubeVVolume(Cube *cube)
 {
-  return cube->vsize[0] * cube->vsize[1] * cube->vsize[2];
+  /* @brief a helper method that returns the physical volume of a voxel
+   * in the Cube.
+   * @p Cube *cube
+   * @return double volume
+   */
+  return cube->vsize[0][0] * cube->vsize[1][1] * cube->vsize[2][2];
 }
 
 double CubeVolume(Cube *cube)
 {
+  /* @brief a helper method that returns the physical volume of the
+   * all data in the Cube.
+   * @p Cube *cube
+   * @return double volume
+   */
   return CubeDataSize(cube) * CubeVVolume(cube);
 }
 
 int *CubeRegionIndices(Cube *cube, int *p, int *r)
 {
+  /* @brief a helper method. returns indices of data points in Cube *cube in
+   * the parallel-piped region from p to q
+   * @p Cube *cube
+   * @p int *p, p[3] 3D indices of one corner of the region
+   * @p int *r, r[3] 3D indices of one corner of the region
+   * @return int* a 1D array of integers containing 1D indices
+   */
   int c[] = { cube->ngrid[0], cube->ngrid[1], cube->ngrid[2] },
+      /* TODO I probably want the absolute values of r[0] - p[0]*/
       d[] = { r[0] - p[0] + 1,  r[1] - p[1] + 1 ,  r[2] - p[2] + 1  },
-     *indices = malloc( d[0] * d[1] * d[2] * sizeof(int)),
-     x, y, z;
+      *indices = malloc( d[0] * d[1] * d[2] * sizeof(int)),
+      x, y, z;
 
   for( x = 0; x < d[0] ; x++ ){
     for( y = 0; y < d[1] ; y++ ){
@@ -94,14 +153,24 @@ int *CubeRegionIndices(Cube *cube, int *p, int *r)
 
 Cube *CubeGetRegion(Cube *cube, int *p, int *r)
 {
+  /* @brief returns the Cube containing only the data contained in
+   * between p[3] and r[3], and all the atoms in Cube *cube
+   * @p Cube *cube, the cube to get a region from
+   * @p int *p, p[3] 3D indices of one corner of the region
+   * @p int *r, r[3] 3D indices of one corner of the region
+   * @return Cube, with same atoms as *cube and a subset of the data.
+   */
   int *indices = CubeRegionIndices(cube, p, r),
       d[3] = { r[0] - p[0] + 1, r[1] - p[1] + 1, r[2] - p[2] + 1 },
       dim = d[0] * d[1] * d[2],
-      i;
-  Cube *c = CubeInit(0, d);
+      i, j;
+  Cube *c = CubeInit(cube->nat, d);
+  CubeCopyAtoms(c, cube);
   for(i = 0; i < 3; i++) {
-    c->origin[i] = cube->origin[i] + p[i] * cube->vsize[i];
-    c->vsize[i] = cube->vsize[i];
+    for(j = 0; j < 3; j++) {
+      c->origin[j] = cube->origin[j] + p[j] * cube->vsize[i][j];
+      c->vsize[i][j] = cube->vsize[i][j];
+    }
   }
   for(i=0; i<dim; i++)
   {
@@ -113,10 +182,17 @@ Cube *CubeGetRegion(Cube *cube, int *p, int *r)
 
 void CubePutRegion(Cube *dest, Cube *source, int *p)
 {
+  /* @brief overwrites the data in *dest "above" p[3], with the data *source
+   * @p Cube *dest
+   * @p Cube *source
+   * @p int *p, p[3] 3D indices of one corner of the region
+   * @return void
+   */
+  // TODO need to check if there is enough space in dest-above-p
   int dim = CubeDataSize(source),
       r[3] = { p[0]+source->ngrid[0]-1,
-               p[1]+source->ngrid[1]-1,
-               p[2]+source->ngrid[2]-1 },
+        p[1]+source->ngrid[1]-1,
+        p[2]+source->ngrid[2]-1 },
       *indices = CubeRegionIndices(dest, p, r), i;
   for( i = 0; i < dim; i++ )
   {
@@ -125,9 +201,15 @@ void CubePutRegion(Cube *dest, Cube *source, int *p)
   free(indices);
 }
 
-
 int *LayerIndices(Cube *cube, int dir, int n)
 {
+  /* @brief get 1D indices of the nth layer from the cube in direction dir
+   * @p Cube *cube source cube
+   * @p int dir direction 0 is x, 1 is y, 2 is z
+   * @p int n nth layer
+   * @return int* a 1D array of 1D integers
+   */
+  // TODO needs to check if n is out of boundaries
   int p[3] = {0, 0, 0},
       r[3] = {cube->ngrid[0]-1, cube->ngrid[1]-1, cube->ngrid[2]-1};
   p[dir] = n;
@@ -137,6 +219,12 @@ int *LayerIndices(Cube *cube, int dir, int n)
 
 Cube *CubeGetLayer(Cube *cube, int dir, int n)
 {
+  /* @brief get nth layer from the cube in direction dir
+   * @p Cube *cube source cube
+   * @p int dir direction 0 is x, 1 is y, 2 is z
+   * @p int n nth layer
+   * @return int* a 1D array of 1D integers
+   */
   int p[3] = {0, 0, 0},
       r[3] = {cube->ngrid[0]-1, cube->ngrid[1]-1, cube->ngrid[2]-1};
   p[dir] = n;
@@ -151,11 +239,11 @@ void CubePutLayer(Cube *dest, Cube *source, int dir, int n)
   CubePutRegion(dest, source, p);
 }
 
-double CubeRotateLayers(Cube *cube, int dir, int n)
+void CubeRotateLayers(Cube *cube, int dir, int n)
 {
-  double shift, *data = malloc(CubeDataSize(cube) * sizeof(double));
+  double *data = malloc(CubeDataSize(cube) * sizeof(double));
   int i, j, k,
-      dim = CubeDataSize(cube)/cube->ngrid[dir],
+      dim = CubeDataSize(cube) / cube->ngrid[dir],
       *d_index,
       *c_index;
   for (i = 0; i < cube->ngrid[dir]; ++i)
@@ -180,10 +268,10 @@ double CubeRotateLayers(Cube *cube, int dir, int n)
   free(d_index);
   free(cube->data);
   cube->data = data;
-  shift = n * cube->vsize[dir];
-  cube->origin[dir] -= shift;
-
-  return shift;
+  for (j=0; j < 3; j++)
+  {
+    cube->origin[j] -= n * cube->vsize[dir][j];
+  }
 }
 
 void CubeMoveAtoms(Cube *cube, int dir, double r)
@@ -200,7 +288,7 @@ Cube *CubeRead(char* filename)
   FILE *f  = fopen(filename, "r");
   char line[L_LENGTH];
   int i, nat, ngrid[3];
-  double origin[3], vsize[3];
+  double origin[3], vsize[3][3];
 
   //Header data: # of grid points, atoms, species, as well as v_size
   fgets(line, L_LENGTH, f); //
@@ -209,13 +297,12 @@ Cube *CubeRead(char* filename)
   fgets(line, L_LENGTH, f);
   sscanf(line, "%d %lf %lf %lf", &nat, origin, origin + 1, origin + 2);
 
-  // assume orthorhombic for now
   fgets(line, L_LENGTH, f);
-  sscanf(line,"%d %lf %*f %*f", ngrid, vsize);
+  sscanf(line,"%d %lf %lf %lf", ngrid, vsize[0], vsize[0] + 1, vsize[0] + 2);
   fgets(line, L_LENGTH, f);
-  sscanf(line,"%d %*f %lf %*f", ngrid + 1, vsize + 1);
+  sscanf(line,"%d %lf %lf %lf", ngrid + 1, vsize[1], vsize[1] + 1, vsize[1] + 2);
   fgets(line, L_LENGTH, f);
-  sscanf(line,"%d %*f %*f %lf", ngrid + 2, vsize + 2);
+  sscanf(line,"%d %lf %lf %lf", ngrid + 2, vsize[2], vsize[2] + 1, vsize[2] + 2);
 
   Cube *cube   = CubeInit(nat, ngrid);
   memcpy(cube->origin, origin, sizeof(origin));
@@ -225,10 +312,10 @@ Cube *CubeRead(char* filename)
   //read nuclear positions of all atoms
   for (i = 0; i < cube->nat; ++i){
     fgets(line, L_LENGTH, f);
-    sscanf(line, "%d %*f %lf %lf %lf", &(cube->atoms[i].Z)
-                                     , &(cube->atoms[i].coor[0])
-                                     , &(cube->atoms[i].coor[1])
-                                     , &(cube->atoms[i].coor[2]));
+    sscanf(line, "%d %*f %lf %lf %lf", &(cube->atoms[i].Z),
+                                      &(cube->atoms[i].coor[0]),
+                                      &(cube->atoms[i].coor[1]),
+                                      &(cube->atoms[i].coor[2]));
   }
   //read grid data
   i = 0;
@@ -256,19 +343,24 @@ void CubeWrite(Cube *cube, char *filename)
                                                 cube->origin[2]);
 
   fprintf(f, "%-5d %12.6f %12.6f %12.6f\n", cube->ngrid[0],
-                                            cube->vsize[0], 0., 0.);
-  fprintf(f, "%-5d %12.6f %12.6f %12.6f\n", cube->ngrid[1], 0.,
-                                            cube->vsize[1], 0.);
-  fprintf(f, "%-5d %12.6f %12.6f %12.6f\n", cube->ngrid[2], 0., 0.,
-                                            cube->vsize[2]);
-
+                                            cube->vsize[0][0],
+                                            cube->vsize[0][1],
+                                            cube->vsize[0][2]);
+  fprintf(f, "%-5d %12.6f %12.6f %12.6f\n", cube->ngrid[1],
+                                            cube->vsize[1][0],
+                                            cube->vsize[1][1],
+                                            cube->vsize[1][2]);
+  fprintf(f, "%-5d %12.6f %12.6f %12.6f\n", cube->ngrid[2],
+                                            cube->vsize[2][0],
+                                            cube->vsize[2][1],
+                                            cube->vsize[2][2]);
   for (int i = 0; i < cube->nat; ++i)
   {
     fprintf(f, "%-3d %8.4f %14.10f %14.10f %14.10f\n", cube->atoms[i].Z,
-                                                   (float) cube->atoms[i].Z,
-                                                   cube->atoms[i].coor[0],
-                                                   cube->atoms[i].coor[1],
-                                                   cube->atoms[i].coor[2]);
+                                                       (float) cube->atoms[i].Z,
+                                                       cube->atoms[i].coor[0],
+                                                       cube->atoms[i].coor[1],
+                                                       cube->atoms[i].coor[2]);
   }
   int size = cube->ngrid[0] * cube->ngrid[1] * cube->ngrid[2];
   for (int i = 0; i < size; ++i)
