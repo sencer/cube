@@ -21,29 +21,29 @@ int main(int argc, char *argv[])
   }
   else if(argc == 4)
   {
-    thr = atof(argv[3]);
+    thr = atof(argv[3]);  // will not rotate more than thr threshold in Angstrom
   }
   else
   {
-    thr = 2;
+    thr = 2;             // default is 2
   }
 
   Cube *c = CubeRead(argv[1]);
 
-  for (i = 0; i < 3; ++i)
+  for (i = 0; i < 3; ++i)               // direction i 0,1,2 -> x,y,z
   {
     dim = CubeDataSize(c)/c->ngrid[i];
-    for (j = 0; j < c->ngrid[i]; ++j)
+    for (j = 0; j < c->ngrid[i]; ++j)  // layer number j
     {
 
-      // positive direction
-      ind = LayerIndices(c, i, j);
+      ind = LayerIndices(c, i, j);     // positive direction
       sum = 0;
-      for (k = 0; k < dim; ++k)
+      for (k = 0; k < dim; ++k)        // all voxels k in layer j at i direction
       {
         sum += fabs(c->data[ind[k]]);
       }
-      if(sum < min[i]) {
+      if(sum < min[i])
+      {
         min[i] = sum;
         min_i[i] = j;
       }
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
         min_i[i] = -j-1;
       }
       free(ind);
-      if (j * c->vsize[i] > thr )
+      if (j * c->vsize[i][i] > thr)
       {
         break;
       }
