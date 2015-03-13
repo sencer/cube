@@ -169,10 +169,13 @@ Cube *CubeGetRegion(Cube *cube, int *p, int *r)
       i, j;
   Cube *c = CubeInit(cube->nat, d);
   CubeCopyAtoms(c, cube);
-  for(i = 0; i < 3; i++) {
-    for(j = 0; j < 3; j++) {
-      c->origin[j] = cube->origin[j] + p[j] * cube->vsize[i][j];
-      c->vsize[i][j] = cube->vsize[i][j];
+  CubeSetVoxels(c, cube->vsize);
+  CubeSetOrigin(c, cube->origin);
+  for(i = 0; i < 3; i++)
+  {
+    for(j = 0; j < 3; j++)
+    {
+      c->origin[j] += p[i] * cube->vsize[i][j];
     }
   }
   for(i=0; i<dim; i++)
