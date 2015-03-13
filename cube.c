@@ -83,7 +83,7 @@ void CubeSetVoxels(Cube *dest, double vsize[3][3])
    * @p Cube dest   The cube to apply new voxel sizes
    * @p double[3][3] vsize an array of length = 3, containing new voxel sizes
    */
-  memcpy(dest->vsize, vsize, 3 * sizeof(dest->vsize));
+  memcpy(dest->vsize, vsize, sizeof(dest->vsize));
 }
 
 void CubeSetOrigin(Cube *dest, double origin[3])
