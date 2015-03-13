@@ -55,6 +55,9 @@ void CubeRotateLayers(Cube *cube, int dir, int n); // rotate all the layers in d
 
 void CubeMoveAtoms(Cube *cube, int dir, double r);  // move all atoms in direction dir r-much.
 
+void CubeBeautify(Cube *c, double thr);
+void CubeTrim(Cube **c, double thr);
+
 #endif /* end of include guard: Cube_H_XTY81TBG */
 
 // vim: foldmethod=syntax

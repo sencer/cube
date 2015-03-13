@@ -381,4 +381,61 @@ void CubeWrite(Cube *cube, char *filename)
   fclose(f);
 }
 
+double GetLayerMax(Cube *c, int dir, int layer, int dim)
+{
+  int *indices = LayerIndices(c, dir, layer);
+  double max = -100;
+  for(int i = 0; i < dim; ++i)
+  {
+    if(c->data[indices[i]] > max)
+      max = c->data[indices[i]];
+  }
+  free(indices);
+  return max;
+}
+
+void CubeBeautify(Cube *c, double thr)
+{
+  int dim;
+  for(int i = 0; i < 3; ++i)
+  {
+    dim = CubeDataSize(c) / c->ngrid[i];
+    for(int j = 0; j < c->ngrid[i] / 2; ++j)
+    {
+      if(GetLayerMax(c, i, j, dim) < thr)
+      {
+        CubeRotateLayers(c, i, -j);
+        break;
+      }
+      else if(GetLayerMax(c, i, c->ngrid[i] - 1 - j, dim) < thr)
+      {
+        CubeRotateLayers(c, i, 1 + j - c->ngrid[i]);
+        break;
+      }
+    }
+  }
+}
+
+void CubeTrim(Cube **c, double thr)
+{
+  Cube *tmp = *c;
+  int dim, p[6] = { 0, 0, 0, tmp->ngrid[0] - 1, tmp->ngrid[1] - 1, tmp->ngrid[2] - 1 };
+  for(int i = 0; i < 3; ++i)
+  {
+    dim = CubeDataSize(tmp) / tmp->ngrid[i];
+    for(int j = 0; j < tmp->ngrid[i] / 2; ++j)
+    {
+      if(GetLayerMax(tmp, i, j, dim) > thr) break;
+      p[i] += 1;
+    }
+    for(int j = tmp->ngrid[i] - 1; j > tmp->ngrid[i] / 2 - 1; --j)
+    {
+      if(GetLayerMax(tmp, i, j, dim) > thr) break;
+      p[i + 3] -= 1;
+    }
+  }
+  *c = CubeGetRegion(tmp, p, p + 3);
+  CubeDelete(tmp);
+}
+
 // vim: foldmethod=syntax
