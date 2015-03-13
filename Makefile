@@ -20,3 +20,7 @@ $(EXEC): $(DEPS)
 
 clean:
 	rm -f *.o $(EXEC)
+
+%.c: ;
+%.h: ;
+Makefile: ;
