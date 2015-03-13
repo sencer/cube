@@ -30,14 +30,14 @@ int FilesList(char files[5000][11])
   return nfile;
 }
 
-void ReadInput(int *nat, int *ntype, int *num, int *z, double *celldm)
+void ReadInput(int *nat, int *ntyp, int *num, int *z, double *celldm)
 {
   FILE *f = fopen("cube.in", "r");
   char *line;
   size_t len = 0;
   getline(&line, &len, f);
-  sscanf(line, "%d %d", nat, ntype);
-  for (int i = 0; i < *ntype; ++i)
+  sscanf(line, "%d %d", nat, ntyp);
+  for (int i = 0; i < *ntyp; ++i)
   {
     getline(&line, &len, f);
     sscanf(line, "%d %d", num+i, z+i);
@@ -181,22 +181,28 @@ void Trim(Cube **c)
 int main()
 {
   char files[5000][11];
-  int nfile = FilesList(files);
   double celldm[9];
-  int nat = 0, ntype = 0, num[30], z[30];
-  ReadInput(&nat, &ntype, num, z, celldm);
+  int nat = 0,
+      ntyp = 0,
+      num[30],
+      z[30],
+      ngrid[3],
+      dim,
+      dummy[3],
+      nfile = FilesList(files);
+  char fname[20];
 
-  int ngrid[3], dim;
-  fclose(ReadDatHeader("dat/50.dat", ngrid));
+  if(nfile < 1) return -1;
+
+  ReadInput(&nat, &ntyp, num, z, celldm);
+  sprintf(fname, "dat/%s", files[0]);
+  fclose(ReadDatHeader(fname, ngrid));
   dim = ngrid[0] * ngrid[1];
 
-  int dummy[3];
-  char fname[20];
-  FILE *f;
-
-#pragma omp parallel for private(fname) firstprivate(f) shared(dummy)
+#pragma omp parallel for private(fname) shared(dummy)
   for(int file = 0; file < nfile; ++file)
   {
+    FILE *f;
     Cube *c = CubeInit(nat, ngrid);
     for (int i = 0; i < 3; ++i)
       for (int j = 0; j < 3; ++j)
