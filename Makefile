@@ -1,7 +1,6 @@
-# makefile for APC524 HW1
 CC=gcc
 CFLAGS= -lm -Wall -pedantic -std=c99
-EXEC = interpolate beautify test trim binary interp2
+EXEC = beautify qedat
 DEPS = cube.o
 
 .PHONY: all debug
