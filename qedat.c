@@ -5,6 +5,7 @@
 #include <math.h>
 #include <dirent.h>
 #include "cube.h"
+#define THR 5.E-3
 
 int is_dat(char const *name)
 {
@@ -134,7 +135,7 @@ double GetLayerMax(Cube *c, int dir, int layer, int dim)
 void Beautify(Cube *c)
 {
   int dim;
-  double thr = 5.E-3;
+  double thr = THR;
   for(int i = 0; i < 3; ++i)
   {
     dim = CubeDataSize(c) / c->ngrid[i];
