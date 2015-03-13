@@ -36,7 +36,7 @@ void CubeWrite(Cube *cube, char *filename);  // write Cube into a file
 void CubeCopyData(Cube *dest, Cube *source);          // copy volumetric data from a Cube to another
 void CubeCopyAtoms(Cube *dest, Cube *source);         // copy atoms from a Cube to another
 void CubeSetVoxels(Cube *dest, double vsize[3][3]);   // set voxel sizes of a Cube
-void CubeSetOrigin(Cube *dest, double *origin);       // set origin of Cube data
+void CubeSetOrigin(Cube *dest, double origin[3]);       // set origin of Cube data
 
 int CubeDataSize(Cube *cube);                    // return the number of data points of Cube
 double CubeVVolume(Cube *cube);                  // return volume of a single Voxes in Bohr^3

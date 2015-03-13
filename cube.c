@@ -83,7 +83,7 @@ void CubeSetVoxels(Cube *dest, double vsize[3][3])
   memcpy(dest->vsize, vsize, 3 * sizeof(dest->vsize));
 }
 
-void CubeSetOrigin(Cube *dest, double *origin)
+void CubeSetOrigin(Cube *dest, double origin[3])
 {
   /* @brief Set origin for the data in the Cube file wrt origin for the atoms
    * @p Cube dest   The cube to apply new coordinates for the
