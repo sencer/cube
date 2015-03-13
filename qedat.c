@@ -155,6 +155,27 @@ void Beautify(Cube *c)
   }
 }
 
+Cube *Trim(Cube *c)
+{
+  int dim, p[6] = { 0, 0, 0, c->ngrid[0] - 1, c->ngrid[1] - 1, c->ngrid[2] - 1 };
+  double thr = THR;
+  for(int i = 0; i < 3; ++i)
+  {
+    dim = CubeDataSize(c) / c->ngrid[i];
+    for(int j = 0; j < c->ngrid[i] / 2; ++j)
+    {
+      if(GetLayerMax(c, i, j, dim) > thr) break;
+      p[i] += 1;
+    }
+    for(int j = c->ngrid[i] - 1; j > c->ngrid[i] / 2 - 1; --j)
+    {
+      if(GetLayerMax(c, i, j, dim) > thr) break;
+      p[i + 3] -= 1;
+    }
+  }
+  return CubeGetRegion(c, p, p + 3);
+}
+
 int main()
 {
   char files[5000][11];
@@ -183,9 +204,11 @@ int main()
     ReadDatData(f, ngrid, dim, c);
     GetAtoms(atoi(files[file]), c, nat, z, num);
     Beautify(c);
+    Cube *nc = Trim(c);
     sprintf(fname, "%d.cube", atoi(files[file]));
-    CubeWrite(c, fname);
+    CubeWrite(nc, fname);
     CubeDelete(c);
+    CubeDelete(nc);
   }
   return 0;
 }
