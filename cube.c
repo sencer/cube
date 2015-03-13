@@ -18,6 +18,9 @@ Cube *CubeInit(int nat, int* ngrid)
   cube->nat = nat;
   memcpy(cube->ngrid, ngrid, 3 * sizeof(int));
 
+  memset(cube->vsize, 0, sizeof(cube->vsize));
+  memset(cube->origin, 0, sizeof(cube->origin));
+
   return cube;
 }
 
