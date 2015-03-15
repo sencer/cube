@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS= -lm -Wall -pedantic -std=c99
-EXEC = beautify qedat
+EXEC = beautify qedat interpolate
 DEPS = cube.o
 
 .PHONY: all debug

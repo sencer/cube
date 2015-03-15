@@ -1,66 +1,88 @@
-#include <stdio.h>
+#include "cube.h"
 #include <stdlib.h>
 #include <string.h>
-#include "cube.h"
+#include <dirent.h>
+#include <math.h>
 
 
-double linear(double a, double b, double weight)
+void SwapPtr(char **arg1, char **arg2)
 {
-  return (1 - weight) * a + weight * b;
+    char *tmp = *arg1;
+    *arg1 = *arg2;
+    *arg2 = tmp;
 }
 
-int main(int argc, char *argv[])
+void QuickSort(char *args[], unsigned int len)
 {
-  if (argc != 4)
-  {
-    printf("Usage:\n\n");
-    printf("interpolate num_images file1 file2");
-  }
-  else
-  {
-    int nimage = atoi(argv[1]),
-        f = atoi(argv[2]),
-        l = atoi(argv[3]),
-        k, j = 0, i;
-    char fname[20];
+    unsigned int i, pvt=0;
 
-    sprintf(fname, "%d.cube", f);
-    Cube *first = CubeRead(fname);
-    sprintf(fname, "%d.cube", l);
-    Cube *last  = CubeRead(fname);
-    Cube *image = CubeInitFrom(first);
+    if (len <= 1)
+        return;
 
-    for (k = 1; k <= nimage; ++k)
+    // swap a randomly selected value to the last node
+    SwapPtr(args+((unsigned int)rand() % len), args+len-1);
+
+    // reset the pivot index to zero, then scan
+    for (i=0;i<len-1;++i)
     {
-      double w = 1.0 * k / (nimage + 1);
-
-      for (i = 0; i < 3; ++i)
-      {
-        image->origin[i] = linear(first->origin[i], last->origin[i], w);
-      }
-
-      for(i = 0; i < first->nat; i++)
-      {
-        image->atoms[i].Z = first->atoms[i].Z;
-        for(j=0; j<3; j++)
-        {
-          image->atoms[i].coor[j] = linear(first->atoms[i].coor[j],
-                                           last->atoms[i].coor[j], w);
-        }
-      }
-
-      int ndata = CubeDataSize(first);
-      for (i = 0; i < ndata; ++i)
-      {
-        image->data[i] = linear(first->data[i], last->data[i], w);
-      }
-
-      sprintf(fname, "%d.cube", (int) (f + (l-f) * w));
-      CubeWrite(image, fname);
+        if (atoi(args[i]) < atoi(args[len-1]))
+            SwapPtr(args+i, args+pvt++);
     }
-    CubeDelete(image);
-    CubeDelete(first);
-    CubeDelete(last);
+
+    // move the pivot value into its place
+    SwapPtr(args+pvt, args+len-1);
+
+    // and invoke on the subsequences. does NOT include the pivot-slot
+    QuickSort(args, pvt++);
+    QuickSort(args+pvt, len - pvt);
+}
+
+int is_extension(char const *ext, char const *name)
+{
+  size_t len = strlen(name), elen = strlen(ext);
+  return len > elen && strcmp(name + len - elen, ext) == 0;
+}
+
+int FilesList(char *files[])
+{
+  DIR *directory = opendir("cube");
+  struct dirent *ent;
+  int nfile = 0;
+
+  while ((ent = readdir(directory)) != NULL)
+  {
+    if(is_extension(".cube", ent->d_name))
+    {
+      files[nfile] = ent->d_name;
+      nfile++;
+    }
+  }
+  QuickSort(files, nfile);
+  return nfile;
+}
+
+int main()
+{
+  char *files[5000];
+  int n = FilesList(files), fi, li, step = 10, im;
+  char fname[20], lname[20];
+#pragma omp parallel for shared(step, files) private(fname, lname, fi, li, im)
+  for(int i = 0; i < n - 1; ++i)
+  {
+    sprintf(fname, "cube/%s", files[i]);
+    sprintf(lname, "cube/%s", files[i+1]);
+    Cube *first = CubeRead(fname);
+    Cube *last  = CubeRead(lname);
+    fi = atoi(files[i]);
+    li = atoi(files[i+1]);
+    im = (li - fi - 1) / step;
+    Cube **cubes = CubeInterpolate(first, last, im);
+    for(int j = 0; j < im; ++j)
+    {
+      sprintf(fname, "%d.cube", fi + ( j + 1 ) * step);
+      CubeWrite(cubes[j], fname);
+    }
+    free(cubes);
   }
   return 0;
 }
