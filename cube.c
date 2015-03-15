@@ -409,7 +409,7 @@ void CubeBeautify(Cube *c, double thr)
       }
       else if(GetLayerMax(c, i, c->ngrid[i] - 1 - j, dim) < thr)
       {
-        CubeRotateLayers(c, i, 1 + j - c->ngrid[i]);
+        CubeRotateLayers(c, i, j);
         break;
       }
     }
