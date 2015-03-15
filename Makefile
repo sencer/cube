@@ -11,7 +11,7 @@ all: $(EXEC)
 debug: CFLAGS += -g
 debug: $(EXEC)
 
-$(EXEC): $(DEPS)
+$(EXEC): % : $(DEPS) %.c
 	$(CC) $@.c $(DEPS) $(CFLAGS) -o $@
 
 %.o:%.c cube.h
