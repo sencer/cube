@@ -33,7 +33,7 @@ Cube *CubeInitFrom(Cube *cube)
    */
   Cube *newCube = CubeInit(cube->nat, cube->ngrid);
   CubeSetVoxels(newCube, cube->vsize);
-  memcpy(newCube->origin, cube->origin, 3 * sizeof(double));
+  CubeSetOrigin(newCube, cube->origin);
   return newCube;
 }
 
@@ -436,6 +436,37 @@ void CubeTrim(Cube **c, double thr)
   }
   *c = CubeGetRegion(tmp, p, p + 3);
   CubeDelete(tmp);
+}
+
+double WeightedAverage(double a, double b, double weight)
+{
+  return (1 - weight) * a + weight * b;
+}
+
+Cube **CubeInterpolate(Cube *first, Cube *last, int n)
+{
+  double w;
+  int dim;
+  Cube **cubes = malloc(n * sizeof(Cube));
+  for(int i = 0; i < n; ++i)
+  {
+    w = 1.0 * (i + 1) / (n + 1);
+    cubes[i] = CubeInitFrom(first);
+    for (int j = 0; j < first->nat; ++j)
+    {
+      cubes[i]->atoms[j].Z = first->atoms[j].Z;
+      for (int k = 0; k < 3; ++k)
+      {
+        cubes[i]->atoms[j].coor[k] = WeightedAverage(first->atoms[j].coor[k], last->atoms[j].coor[k], w);
+      }
+    }
+    dim = CubeDataSize(first);
+    for(int j = 0; j < dim; ++j)
+    {
+      cubes[i]->data[j] = WeightedAverage(first->data[j], last->data[j], w);
+    }
+  }
+  return cubes;
 }
 
 // vim: foldmethod=syntax

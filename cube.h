@@ -57,6 +57,7 @@ void CubeMoveAtoms(Cube *cube, int dir, double r);  // move all atoms in directi
 
 void CubeBeautify(Cube *c, double thr);
 void CubeTrim(Cube **c, double thr);
+Cube **CubeInterpolate(Cube *first, Cube *last, int n);
 
 #endif /* end of include guard: Cube_H_XTY81TBG */
 
