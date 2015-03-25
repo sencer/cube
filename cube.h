@@ -18,13 +18,6 @@ typedef struct cube_data{
   Atom *atoms;                     // atoms as in Atom.
 } Cube;
 
-typedef struct layer_data{
-  int dim[2],         // dimensions
-      size;           // total size of Layer = dim[0] * dim[1]
-  double **data;      // A 2D array
-} Layer;
-
-
 Cube *CubeInit(int nat, int* ngrid);         // allocate space for a cube file in memory as Cube
 Cube *CubeInitFrom(Cube *cube);              // allocate space same size with another Cube
 Cube *CubeCopy(Cube *cube);                  // completely copy some Cube into a new Cube
