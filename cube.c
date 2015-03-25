@@ -21,6 +21,9 @@ Cube *CubeInit(int nat, int* ngrid)
   memset(cube->vsize, 0, sizeof(cube->vsize));
   memset(cube->origin, 0, sizeof(cube->origin));
 
+  sprintf(cube->comment[0], "");
+  sprintf(cube->comment[1], "");
+
   return cube;
 }
 
@@ -343,7 +346,10 @@ void CubeWrite(Cube *cube, char *filename)
 {
   FILE *f = fopen(filename, "w");
 
-  fprintf(f, "\n\n%-5d %12.6f %12.6f %12.6f\n", cube->nat,
+  fprintf(f, "%s\n", cube->comment[0]);
+  fprintf(f, "%s\n", cube->comment[1]);
+
+  fprintf(f, "%-5d %12.6f %12.6f %12.6f\n", cube->nat,
                                                 cube->origin[0],
                                                 cube->origin[1],
                                                 cube->origin[2]);

@@ -15,6 +15,7 @@ typedef struct cube_data{
   double vsize[3][3],              // voxel widths
          origin[3];                // location of origin (wrt coordinate system
   double *data;                    // of the atoms)
+  char comment[2][255];
   Atom *atoms;                     // atoms as in Atom.
 } Cube;
 
