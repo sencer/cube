@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 
 Cube *CubeInit(int nat, int* ngrid)
@@ -393,8 +394,8 @@ double GetLayerMax(Cube *c, int dir, int layer, int dim)
   double max = -100;
   for(int i = 0; i < dim; ++i)
   {
-    if(c->data[indices[i]] > max)
-      max = c->data[indices[i]];
+    if(fabs(c->data[indices[i]]) > max)
+      max = fabs(c->data[indices[i]]);
   }
   free(indices);
   return max;
