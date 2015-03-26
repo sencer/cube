@@ -30,7 +30,7 @@ int FilesList(char files[5000][11])
   return nfile;
 }
 
-void ReadInput(int *nat, int *ntyp, int *num, int *z, double *celldm)
+void ReadInput(int *nat, int *ntyp, int *num, int *z, double celldm[3][3])
 {
   FILE *f = fopen("cube.in", "r");
   char *line;
@@ -44,11 +44,11 @@ void ReadInput(int *nat, int *ntyp, int *num, int *z, double *celldm)
     if(i>0) num[i]+=num[i-1];
   }
   getline(&line, &len, f);
-  sscanf(line, "%lf %lf %lf", celldm + 0, celldm + 3, celldm + 6);
+  sscanf(line, "%lf %lf %lf", celldm[0], celldm[1], celldm[2]);
   getline(&line, &len, f);
-  sscanf(line, "%lf %lf %lf", celldm + 1, celldm + 4, celldm + 7);
+  sscanf(line, "%lf %lf %lf", celldm[0]+1, celldm[1]+1, celldm[2]+1);
   getline(&line, &len, f);
-  sscanf(line, "%lf %lf %lf", celldm + 2, celldm + 5, celldm + 8);
+  sscanf(line, "%lf %lf %lf", celldm[0]+2, celldm[1]+2, celldm[2]+2);
 }
 
 void GetAtoms(int index, Cube *c, int nat, int *z, int *num)
@@ -121,7 +121,7 @@ void ReadDatData(FILE *f, int ngrid[3], int dim, Cube *c)
 int main()
 {
   char files[5000][11];
-  double celldm[9];
+  double celldm[3][3];
   int nat = 0,
       ntyp = 0,
       num[30],
@@ -147,6 +147,7 @@ int main()
     for (int i = 0; i < 3; ++i)
       for (int j = 0; j < 3; ++j)
         c->vsize[i][j] = celldm[i*3+j] / ngrid[i];
+        c->vsize[i][j] = celldm[i][j] / ngrid[i];
     sprintf(fname, "dat/%s", files[file]);
     f = ReadDatHeader(fname, dummy);
     ReadDatData(f, ngrid, dim, c);

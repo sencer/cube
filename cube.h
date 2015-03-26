@@ -36,9 +36,9 @@ int CubeDataSize(Cube *cube);                    // return the number of data po
 double CubeVVolume(Cube *cube);                  // return volume of a single Voxes in Bohr^3
 double CubeVolume(Cube *cube);                   // return total volume in Bohr^3
 
-int *CubeRegionIndices(Cube *cube, int *p, int *r);
-Cube *CubeGetRegion(Cube *cube, int *p, int *r);
-void CubePutRegion(Cube *dest, Cube *source, int *p);
+int *CubeRegionIndices(Cube *cube, int p[3], int r[3]);
+Cube *CubeGetRegion(Cube *cube, int p[3], int r[3]);
+void CubePutRegion(Cube *dest, Cube *source, int p[3]);
 
 int *LayerIndices(Cube *cube, int dir, int n);    // get indices of the nth Layer normal to x/y/z direction
 Cube *CubeGetLayer(Cube *cube, int dir, int n);

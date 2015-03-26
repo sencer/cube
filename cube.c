@@ -132,13 +132,13 @@ double CubeVolume(Cube *cube)
   return CubeDataSize(cube) * CubeVVolume(cube);
 }
 
-int *CubeRegionIndices(Cube *cube, int *p, int *r)
+int *CubeRegionIndices(Cube *cube, int p[3], int r[3])
 {
   /* @brief a helper method. returns indices of data points in Cube *cube in
    * the parallel-piped region from p to q
    * @p Cube *cube
-   * @p int *p, p[3] 3D indices of one corner of the region
-   * @p int *r, r[3] 3D indices of one corner of the region
+   * @p int p[3] 3D indices of one corner of the region
+   * @p int r[3] 3D indices of one corner of the region
    * @return int* a 1D array of integers containing 1D indices
    */
   int c[] = { cube->ngrid[0], cube->ngrid[1], cube->ngrid[2] },
@@ -158,13 +158,13 @@ int *CubeRegionIndices(Cube *cube, int *p, int *r)
   return indices;
 }
 
-Cube *CubeGetRegion(Cube *cube, int *p, int *r)
+Cube *CubeGetRegion(Cube *cube, int p[3], int r[3])
 {
   /* @brief returns the Cube containing only the data contained in
    * between p[3] and r[3], and all the atoms in Cube *cube
    * @p Cube *cube, the cube to get a region from
-   * @p int *p, p[3] 3D indices of one corner of the region
-   * @p int *r, r[3] 3D indices of one corner of the region
+   * @p int p[3] 3D indices of one corner of the region
+   * @p int r[3] 3D indices of one corner of the region
    * @return Cube, with same atoms as *cube and a subset of the data.
    */
   int *indices = CubeRegionIndices(cube, p, r),
@@ -190,12 +190,12 @@ Cube *CubeGetRegion(Cube *cube, int *p, int *r)
   return c;
 }
 
-void CubePutRegion(Cube *dest, Cube *source, int *p)
+void CubePutRegion(Cube *dest, Cube *source, int p[3])
 {
   /* @brief overwrites the data in *dest "above" p[3], with the data *source
    * @p Cube *dest
    * @p Cube *source
-   * @p int *p, p[3] 3D indices of one corner of the region
+   * @p int p[3] 3D indices of one corner of the region
    * @return void
    */
   // TODO need to check if there is enough space in dest-above-p
