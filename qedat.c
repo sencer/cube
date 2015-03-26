@@ -5,7 +5,12 @@
 #include <math.h>
 #include <dirent.h>
 #include "cube.h"
-#define THR 7.E-3
+
+#define THR 6.E-3
+#define MIN(a, b) ((a<b)?a:b)
+#define MAX(a, b) ((a>b)?a:b)
+#define DEG 57.2957795786
+#define B2A 0.529177249
 
 int is_dat(char const *name)
 {
@@ -118,10 +123,81 @@ void ReadDatData(FILE *f, int ngrid[3], int dim, Cube *c)
   fclose(f);
 }
 
+double pAverageNN(Cube *c, int coor[3])
+{
+  int p[3] = { MAX(coor[0] - 1, 0), MAX(coor[1] - 1, 0), MAX(coor[2] - 1, 0) },
+      r[3] = { MIN(coor[0] + 1, c->ngrid[0]-1), MIN(coor[1] + 1, c->ngrid[1]-1), MIN(coor[2] + 1, c->ngrid[2]-1) },
+      dim, *ind = CubeRegionIndices(c, p, r);
+
+  double av = 0;
+  dim = (r[0]-p[0]+1)*(r[1]-p[1]+1)*(r[2]-p[2]+1);
+
+  for(int i = 0; i < dim; ++i)
+  {
+    av += fabs(c->data[ind[i]]);
+  }
+
+  free(ind);
+
+  return av / dim;
+}
+
+void Inverse(double celldm[3][3], double inv[3][3])
+{
+  double det = 0;
+
+  for(int i=0;i<3;++i)
+      det = det + (celldm[0][i]*(celldm[1][(i+1)%3]*celldm[2][(i+2)%3] - celldm[1][(i+2)%3]*celldm[2][(i+1)%3]));
+
+   for(int i=1;i<4;++i)
+   {
+      for(int j=1;j<4;++j)
+      {
+        inv[i-1][j-1] = (celldm[i%3][j%3]*celldm[(i+1)%3][(j+1)%3] - celldm[i%3][(j+1)%3]*celldm[(i+1)%3][j%3])/ det;
+      }
+   }
+}
+
+double VecMult(double a[3], double b[3])
+{
+  return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+}
+
+double VecLen(double a[3])
+{
+  return sqrt(VecMult(a, a));
+}
+
+void VecShift(double pnt[3], double vec[3], double c)
+{
+  for(int i = 0; i < 3; ++i)
+  {
+    pnt[i] += vec[i] * c;
+  }
+}
+
+
+int Coor2DataPnt(int atom, Cube *c, double celldm[3][3], double inv[3][3])
+{
+  int coor[3];
+
+  for(int i = 0; i < 3; ++i)
+  {
+    // TODO Fix for the cases where origin of the cube is not 0
+
+    VecShift(c->atoms[atom].coor, celldm[i],
+        -1 * floor(VecMult(c->atoms[atom].coor, inv[i])));
+
+    coor[i] = VecMult(c->atoms[atom].coor, inv[i]) * celldm[i][i]/c->vsize[i][i];
+  }
+
+  return pAverageNN(c, coor) > THR ? 1: 0;
+}
+
 int main()
 {
   char files[5000][11];
-  double celldm[3][3];
+  double celldm[3][3], inv[3][3], *norm;
   int nat = 0,
       ntyp = 0,
       num[30],
@@ -135,6 +211,12 @@ int main()
   if(nfile < 1) return -1;
 
   ReadInput(&nat, &ntyp, num, z, celldm);
+  Inverse(celldm, inv);
+  norm = (double [3]) {
+    VecLen(celldm[0]),
+    VecLen(celldm[1]),
+    VecLen(celldm[2])
+  };
   sprintf(fname, "dat/%s", files[0]);
   fclose(ReadDatHeader(fname, ngrid));
   dim = ngrid[0] * ngrid[1];
@@ -143,20 +225,48 @@ int main()
   for(int file = 0; file < nfile; ++file)
   {
     FILE *f;
+    char com[255] = "";
+    int pos = 0;
     Cube *c = CubeInit(nat, ngrid);
+
     for (int i = 0; i < 3; ++i)
+    {
       for (int j = 0; j < 3; ++j)
-        c->vsize[i][j] = celldm[i*3+j] / ngrid[i];
+      {
         c->vsize[i][j] = celldm[i][j] / ngrid[i];
+      }
+    }
+
     sprintf(fname, "dat/%s", files[file]);
     f = ReadDatHeader(fname, dummy);
     ReadDatData(f, ngrid, dim, c);
     GetAtoms(atoi(files[file]), c, nat, z, num);
+    for (int i = 0; i < c->nat; i++)
+    {
+      if(c->atoms[i].Z != 22) break;
+      if(Coor2DataPnt(i, c, celldm, inv))
+      {
+        pos += sprintf(com + pos, "%d ", i);
+      }
+    }
+    CubeRotateLayers(c, 0, -37);
+    CubeRotateLayers(c, 1, 6);
+    CubeRotateLayers(c, 2, -112);
     CubeBeautify(c, THR);
     CubeTrim(&c, THR);
     sprintf(fname, "%d.cube", atoi(files[file]));
+
+    sprintf(c->comment[0], "%-10.6f %-10.6f %-10.6f %-10.6f %-10.6f %-10.6f",
+        norm[0]*B2A, norm[1]*B2A, norm[2]*B2A,
+        DEG*acos(VecMult(celldm[0], celldm[2])/(norm[2]*norm[0])),
+        DEG*acos(VecMult(celldm[1], celldm[2])/(norm[1]*norm[2])),
+        DEG*acos(VecMult(celldm[0], celldm[1])/(norm[0]*norm[1])));
+
+    strcpy(c->comment[1], com);
     CubeWrite(c, fname);
     CubeDelete(c);
   }
   return 0;
 }
+
+// vi: foldmethod=syntax
