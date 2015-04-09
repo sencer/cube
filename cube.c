@@ -330,13 +330,12 @@ Cube *CubeRead(char* filename)
   //read grid data
   i = 0;
   while(fgets(line, L_LENGTH, f)){
-    sscanf(line, "%lf %lf %lf %lf %lf %lf", &cube->data[i+0],
-                                            &cube->data[i+1],
-                                            &cube->data[i+2],
-                                            &cube->data[i+3],
-                                            &cube->data[i+4],
-                                            &cube->data[i+5]);
-    i += 6;
+    i += sscanf(line, "%lf %lf %lf %lf %lf %lf", &cube->data[i+0],
+                                                 &cube->data[i+1],
+                                                 &cube->data[i+2],
+                                                 &cube->data[i+3],
+                                                 &cube->data[i+4],
+                                                 &cube->data[i+5]);
   }
 
   fclose(f);
@@ -379,7 +378,7 @@ void CubeWrite(Cube *cube, char *filename)
   for (int i = 0; i < size; ++i)
   {
     fprintf(f, "%14.6E ", cube->data[i]);
-    if (i % 6 == 5)
+    if (! (((i+1) % cube->ngrid[2] ) % 6))
     {
       fprintf(f, "\n");
     }
