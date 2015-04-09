@@ -377,7 +377,7 @@ void CubeWrite(Cube *cube, char *filename)
   int size = cube->ngrid[0] * cube->ngrid[1] * cube->ngrid[2];
   for (int i = 0; i < size; ++i)
   {
-    fprintf(f, "%14.6E ", cube->data[i]);
+    fprintf(f, "%13.5E", cube->data[i]);
     if (! (((i+1) % cube->ngrid[2] ) % 6))
     {
       fprintf(f, "\n");
