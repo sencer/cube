@@ -145,12 +145,18 @@ int *CubeRegionIndices(Cube *cube, int p[3], int r[3])
       /* TODO I probably want the absolute values of r[0] - p[0]*/
       d[] = { r[0] - p[0] + 1,  r[1] - p[1] + 1 ,  r[2] - p[2] + 1  },
       *indices = malloc( d[0] * d[1] * d[2] * sizeof(int)),
-      x, y, z;
+      x, y, z, xp, yp, zp;
 
   for( x = 0; x < d[0] ; x++ ){
+    xp = x + p[0];
+    xp = xp - cube->ngrid[0] * floor((double)xp / cube->ngrid[0]);
     for( y = 0; y < d[1] ; y++ ){
+      yp = y + p[1];
+      yp = yp - cube->ngrid[1] * floor((double)yp / cube->ngrid[1]);
       for( z = 0; z < d[2] ; z++ ){
-        indices[d[2]*d[1]*x+d[2]*y+z] = c[2] * c[1] * (x + p[0]) + c[2] * (y + p[1]) + z + p[2];
+        zp = z + p[2];
+        zp = zp - cube->ngrid[2] * floor((double)zp / cube->ngrid[2]);
+        indices[d[2]*d[1]*x+d[2]*y+z] = c[2] * c[1] * xp + c[2] * yp + zp;
       }
     }
   }
