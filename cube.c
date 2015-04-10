@@ -435,12 +435,12 @@ void CubeTrim(Cube **c, double thr)
   for(int i = 0; i < 3; ++i)
   {
     dim = CubeDataSize(tmp) / tmp->ngrid[i];
-    for(int j = 0; j < tmp->ngrid[i] / 2; ++j)
+    for(int j = 0; j < tmp->ngrid[i]-1; ++j)
     {
       if(GetLayerMax(tmp, i, j, dim) > thr) break;
       p[i] += 1;
     }
-    for(int j = tmp->ngrid[i] - 1; j > tmp->ngrid[i] / 2 - 1; --j)
+    for(int j = tmp->ngrid[i] - 1; j > 0; --j)
     {
       if(GetLayerMax(tmp, i, j, dim) > thr) break;
       p[i + 3] -= 1;
