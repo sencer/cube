@@ -5,7 +5,7 @@
 #include <math.h>
 
 
-Cube *CubeInit(int nat, int* ngrid)
+Cube *CubeInit(int nat, int ngrid[3])
 {
   /* @brief Allocates the memory needed for a Cube
    * @p int nat number of atoms

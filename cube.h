@@ -19,7 +19,7 @@ typedef struct cube_data{
   Atom *atoms;                     // atoms as in Atom.
 } Cube;
 
-Cube *CubeInit(int nat, int* ngrid);         // allocate space for a cube file in memory as Cube
+Cube *CubeInit(int nat, int ngrid[3]);         // allocate space for a cube file in memory as Cube
 Cube *CubeInitFrom(Cube *cube);              // allocate space same size with another Cube
 Cube *CubeCopy(Cube *cube);                  // completely copy some Cube into a new Cube
 Cube *CubeRead(char *filename);              // read a cube file into memory as "Cube"
