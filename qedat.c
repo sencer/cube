@@ -249,9 +249,6 @@ int main()
         pos += sprintf(com + pos, "%d ", i);
       }
     }
-    CubeRotateLayers(c, 0, -37);
-    CubeRotateLayers(c, 1, 6);
-    CubeRotateLayers(c, 2, -112);
     CubeBeautify(c, THR);
     CubeTrim(&c, THR);
     sprintf(fname, "%d.cube", atoi(files[file]));
