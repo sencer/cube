@@ -1,6 +1,10 @@
 #ifndef Cube_H_XTY81TBG
 #define Cube_H_XTY81TBG 1
+
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "3d.h"
 
 #define L_LENGTH 110
 
@@ -13,6 +17,7 @@ typedef struct cube_data{
   int nat,                         // number of atoms
       ngrid[3];                    // number of grid points
   double vsize[3][3],              // voxel widths
+         invvsize[3][3],
          origin[3];                // location of origin (wrt coordinate system
   double *data;                    // of the atoms)
   char comment[2][255];
@@ -40,7 +45,7 @@ int *CubeRegionIndices(Cube *cube, int p[3], int r[3]);
 Cube *CubeGetRegion(Cube *cube, int p[3], int r[3]);
 void CubePutRegion(Cube *dest, Cube *source, int p[3]);
 
-int *LayerIndices(Cube *cube, int dir, int n);    // get indices of the nth Layer normal to x/y/z direction
+int *CubeLayerIndices(Cube *cube, int dir, int n);    // get indices of the nth Layer normal to x/y/z direction
 Cube *CubeGetLayer(Cube *cube, int dir, int n);
 void CubePutLayer(Cube *dest, Cube *source, int dir, int n);
 void CubeRotateLayers(Cube *cube, int dir, int n); // rotate all the layers in direction dir n times

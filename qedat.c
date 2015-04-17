@@ -1,39 +1,8 @@
 #define _GNU_SOURCE
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <dirent.h>
+
 #include "cube.h"
-
-#define THR 6.E-3
-#define MIN(a, b) ((a<b)?a:b)
-#define MAX(a, b) ((a>b)?a:b)
-#define DEG 57.2957795786
-#define B2A 0.529177249
-
-int is_dat(char const *name)
-{
-  size_t len = strlen(name);
-  return len > 4 && strcmp(name + len - 4, ".dat") == 0;
-}
-
-int FilesList(char files[5000][11])
-{
-  DIR *directory = opendir("dat");
-  struct dirent *ent;
-  int nfile = 0;
-
-  while ((ent = readdir(directory)) != NULL)
-  {
-    if(is_dat(ent->d_name))
-    {
-      strcpy(files[nfile], ent->d_name);
-      nfile++;
-    }
-  }
-  return nfile;
-}
+#include "files.h"
+#include "3d.h"
 
 void ReadInput(int *nat, int *ntyp, int *num, int *z, double celldm[3][3])
 {
@@ -142,41 +111,6 @@ double pAverageNN(Cube *c, int coor[3])
   return av / dim;
 }
 
-void Inverse(double celldm[3][3], double inv[3][3])
-{
-  double det = 0;
-
-  for(int i=0;i<3;++i)
-      det = det + (celldm[0][i]*(celldm[1][(i+1)%3]*celldm[2][(i+2)%3] - celldm[1][(i+2)%3]*celldm[2][(i+1)%3]));
-
-   for(int i=1;i<4;++i)
-   {
-      for(int j=1;j<4;++j)
-      {
-        inv[i-1][j-1] = (celldm[i%3][j%3]*celldm[(i+1)%3][(j+1)%3] - celldm[i%3][(j+1)%3]*celldm[(i+1)%3][j%3])/ det;
-      }
-   }
-}
-
-double VecMult(double a[3], double b[3])
-{
-  return a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
-}
-
-double VecLen(double a[3])
-{
-  return sqrt(VecMult(a, a));
-}
-
-void VecShift(double pnt[3], double vec[3], double c)
-{
-  for(int i = 0; i < 3; ++i)
-  {
-    pnt[i] += vec[i] * c;
-  }
-}
-
-
 int Coor2DataPnt(int atom, Cube *c, double celldm[3][3], double inv[3][3])
 {
   int coor[3];
@@ -186,9 +120,9 @@ int Coor2DataPnt(int atom, Cube *c, double celldm[3][3], double inv[3][3])
     // TODO Fix for the cases where origin of the cube is not 0
 
     VecShift(c->atoms[atom].coor, celldm[i],
-        -1 * floor(VecMult(c->atoms[atom].coor, inv[i])));
+        -1 * floor(VecDot(c->atoms[atom].coor, inv[i])));
 
-    coor[i] = VecMult(c->atoms[atom].coor, inv[i]) * celldm[i][i]/c->vsize[i][i];
+    coor[i] = VecDot(c->atoms[atom].coor, inv[i]) * celldm[i][i]/c->vsize[i][i];
   }
 
   return pAverageNN(c, coor) > THR ? 1: 0;
@@ -205,13 +139,13 @@ int main()
       ngrid[3],
       dim,
       dummy[3],
-      nfile = FilesList(files);
+      nfile = FilesList(files, "dat");
   char fname[20];
 
   if(nfile < 1) return -1;
 
   ReadInput(&nat, &ntyp, num, z, celldm);
-  Inverse(celldm, inv);
+  Inv3D(celldm, inv);
   norm = (double [3]) {
     VecLen(celldm[0]),
     VecLen(celldm[1]),
@@ -243,7 +177,7 @@ int main()
     GetAtoms(atoi(files[file]), c, nat, z, num);
     for (int i = 0; i < c->nat; i++)
     {
-      if(c->atoms[i].Z != 22) break;
+      /* if(c->atoms[i].Z != 22) break; */
       if(Coor2DataPnt(i, c, celldm, inv))
       {
         pos += sprintf(com + pos, "%d ", i);
@@ -255,9 +189,9 @@ int main()
 
     sprintf(c->comment[0], "%-10.6f %-10.6f %-10.6f %-10.6f %-10.6f %-10.6f",
         norm[0]*B2A, norm[1]*B2A, norm[2]*B2A,
-        DEG*acos(VecMult(celldm[0], celldm[2])/(norm[2]*norm[0])),
-        DEG*acos(VecMult(celldm[1], celldm[2])/(norm[1]*norm[2])),
-        DEG*acos(VecMult(celldm[0], celldm[1])/(norm[0]*norm[1])));
+        DEG*acos(VecDot(celldm[0], celldm[2])/(norm[2]*norm[0])),
+        DEG*acos(VecDot(celldm[1], celldm[2])/(norm[1]*norm[2])),
+        DEG*acos(VecDot(celldm[0], celldm[1])/(norm[0]*norm[1])));
 
     strcpy(c->comment[1], com);
     CubeWrite(c, fname);

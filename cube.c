@@ -1,9 +1,4 @@
 #include "cube.h"
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-
 
 Cube *CubeInit(int nat, int ngrid[3])
 {
@@ -20,10 +15,11 @@ Cube *CubeInit(int nat, int ngrid[3])
   memcpy(cube->ngrid, ngrid, 3 * sizeof(int));
 
   memset(cube->vsize, 0, sizeof(cube->vsize));
+  memset(cube->invvsize, 0, sizeof(cube->vsize));
   memset(cube->origin, 0, sizeof(cube->origin));
 
-  sprintf(cube->comment[0], "");
-  sprintf(cube->comment[1], "");
+  cube->comment[0][0] = '\0';
+  cube->comment[1][0] = '\0';
 
   return cube;
 }
@@ -88,6 +84,7 @@ void CubeSetVoxels(Cube *dest, double vsize[3][3])
    * @p double[3][3] vsize an array of length = 3, containing new voxel sizes
    */
   memcpy(dest->vsize, vsize, sizeof(dest->vsize));
+  Inv3D(vsize, dest->invvsize);
 }
 
 void CubeSetOrigin(Cube *dest, double origin[3])
@@ -217,7 +214,7 @@ void CubePutRegion(Cube *dest, Cube *source, int p[3])
   free(indices);
 }
 
-int *LayerIndices(Cube *cube, int dir, int n)
+int *CubeLayerIndices(Cube *cube, int dir, int n)
 {
   /* @brief get 1D indices of the nth layer from the cube in direction dir
    * @p Cube *cube source cube
@@ -273,8 +270,8 @@ void CubeRotateLayers(Cube *cube, int dir, int n)
     {
       k -= cube->ngrid[dir];
     }
-    c_index = LayerIndices(cube, dir, i);
-    d_index = LayerIndices(cube, dir, k);
+    c_index = CubeLayerIndices(cube, dir, i);
+    d_index = CubeLayerIndices(cube, dir, k);
     for (j = 0; j < dim; ++j)
     {
       data[d_index[j]] = cube->data[c_index[j]];
@@ -393,9 +390,9 @@ void CubeWrite(Cube *cube, char *filename)
   fclose(f);
 }
 
-double GetLayerMax(Cube *c, int dir, int layer, int dim)
+double CubeLayerMax(Cube *c, int dir, int layer, int dim)
 {
-  int *indices = LayerIndices(c, dir, layer);
+  int *indices = CubeLayerIndices(c, dir, layer);
   double max = -100;
   for(int i = 0; i < dim; ++i)
   {
@@ -414,12 +411,12 @@ void CubeBeautify(Cube *c, double thr)
     dim = CubeDataSize(c) / c->ngrid[i];
     for(int j = 0; j < c->ngrid[i] / 2; ++j)
     {
-      if(GetLayerMax(c, i, j, dim) < thr)
+      if(CubeLayerMax(c, i, j, dim) < thr)
       {
         CubeRotateLayers(c, i, -j);
         break;
       }
-      else if(GetLayerMax(c, i, c->ngrid[i] - 1 - j, dim) < thr)
+      else if(CubeLayerMax(c, i, c->ngrid[i] - 1 - j, dim) < thr)
       {
         CubeRotateLayers(c, i, j);
         break;
@@ -437,22 +434,17 @@ void CubeTrim(Cube **c, double thr)
     dim = CubeDataSize(tmp) / tmp->ngrid[i];
     for(int j = 0; j < tmp->ngrid[i]-1; ++j)
     {
-      if(GetLayerMax(tmp, i, j, dim) > thr) break;
+      if(CubeLayerMax(tmp, i, j, dim) > thr) break;
       p[i] += 1;
     }
     for(int j = tmp->ngrid[i] - 1; j > 0; --j)
     {
-      if(GetLayerMax(tmp, i, j, dim) > thr) break;
+      if(CubeLayerMax(tmp, i, j, dim) > thr) break;
       p[i + 3] -= 1;
     }
   }
   *c = CubeGetRegion(tmp, p, p + 3);
   CubeDelete(tmp);
-}
-
-double WeightedAverage(double a, double b, double weight)
-{
-  return (1 - weight) * a + weight * b;
 }
 
 Cube **CubeInterpolate(Cube *first, Cube *last, int n)
