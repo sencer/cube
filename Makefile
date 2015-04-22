@@ -16,7 +16,6 @@ $(EXEC): % : %.c libcube.a
 
 libcube.a:$(DEPS)
 	ar rvs libcube.a $(DEPS)
-	rm -f *.o
 
 %.o:%.c cube.h
 	$(CC) $(CFLAGS) -c $<
