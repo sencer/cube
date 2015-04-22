@@ -390,9 +390,10 @@ void CubeWrite(Cube *cube, char *filename)
   fclose(f);
 }
 
-double CubeLayerMax(Cube *c, int dir, int layer, int dim)
+double CubeLayerMax(Cube *c, int dir, int layer)
 {
-  int *indices = CubeLayerIndices(c, dir, layer);
+  int *indices = CubeLayerIndices(c, dir, layer),
+      dim = CubeDataSize(c) / c->ngrid[dir];
   double max = -100;
   for(int i = 0; i < dim; ++i)
   {
@@ -405,18 +406,16 @@ double CubeLayerMax(Cube *c, int dir, int layer, int dim)
 
 void CubeBeautify(Cube *c, double thr)
 {
-  int dim;
   for(int i = 0; i < 3; ++i)
   {
-    dim = CubeDataSize(c) / c->ngrid[i];
     for(int j = 0; j < c->ngrid[i] / 2; ++j)
     {
-      if(CubeLayerMax(c, i, j, dim) < thr)
+      if(CubeLayerMax(c, i, j) < thr)
       {
         CubeRotateLayers(c, i, -j);
         break;
       }
-      else if(CubeLayerMax(c, i, c->ngrid[i] - 1 - j, dim) < thr)
+      else if(CubeLayerMax(c, i, c->ngrid[i] - 1 - j) < thr)
       {
         CubeRotateLayers(c, i, j);
         break;
@@ -428,18 +427,17 @@ void CubeBeautify(Cube *c, double thr)
 void CubeTrim(Cube **c, double thr)
 {
   Cube *tmp = *c;
-  int dim, p[6] = { 0, 0, 0, tmp->ngrid[0] - 1, tmp->ngrid[1] - 1, tmp->ngrid[2] - 1 };
+  int p[6] = { 0, 0, 0, tmp->ngrid[0] - 1, tmp->ngrid[1] - 1, tmp->ngrid[2] - 1 };
   for(int i = 0; i < 3; ++i)
   {
-    dim = CubeDataSize(tmp) / tmp->ngrid[i];
     for(int j = 0; j < tmp->ngrid[i]-1; ++j)
     {
-      if(CubeLayerMax(tmp, i, j, dim) > thr) break;
+      if(CubeLayerMax(tmp, i, j) > thr) break;
       p[i] += 1;
     }
     for(int j = tmp->ngrid[i] - 1; j > 0; --j)
     {
-      if(CubeLayerMax(tmp, i, j, dim) > thr) break;
+      if(CubeLayerMax(tmp, i, j) > thr) break;
       p[i + 3] -= 1;
     }
   }
