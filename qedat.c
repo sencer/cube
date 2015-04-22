@@ -4,6 +4,8 @@
 #include "files.h"
 #include "3d.h"
 
+#define THR 6.E-3
+
 void ReadInput(int *nat, int *ntyp, int *num, int *z, double celldm[3][3])
 {
   FILE *f = fopen("cube.in", "r");
@@ -118,6 +120,7 @@ int Coor2DataPnt(int atom, Cube *c, double celldm[3][3], double inv[3][3])
   for(int i = 0; i < 3; ++i)
   {
     // TODO Fix for the cases where origin of the cube is not 0
+
 
     VecShift(c->atoms[atom].coor, celldm[i],
         -1 * floor(VecDot(c->atoms[atom].coor, inv[i])));
