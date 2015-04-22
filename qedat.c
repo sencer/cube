@@ -187,7 +187,7 @@ int main()
     }
     CubeBeautify(c, THR);
     CubeTrim(&c, THR);
-    sprintf(fname, "%d.cube", atoi(files[file]));
+    sprintf(fname, "cube/%d.cube", atoi(files[file]));
 
     sprintf(c->comment[0], "%-10.6f %-10.6f %-10.6f %-10.6f %-10.6f %-10.6f",
         norm[0]*B2A, norm[1]*B2A, norm[2]*B2A,
