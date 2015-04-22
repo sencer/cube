@@ -134,7 +134,7 @@ int Coor2DataPnt(int atom, Cube *c, double celldm[3][3], double inv[3][3])
 int main()
 {
   char files[5000][11];
-  double celldm[3][3], inv[3][3], *norm;
+  double celldm[3][3], inv[3][3], *norm, vsize[3][3];
   int nat = 0,
       ntyp = 0,
       num[30],
@@ -158,6 +158,12 @@ int main()
   fclose(ReadDatHeader(fname, ngrid));
   dim = ngrid[0] * ngrid[1];
 
+  memcpy(vsize, celldm, sizeof(celldm));
+  for(int i = 0; i < 3; ++i)
+  {
+    VecScale(vsize[i], 1/ngrid[i]);
+  }
+
 #pragma omp parallel for private(fname) shared(dummy)
   for(int file = 0; file < nfile; ++file)
   {
@@ -165,14 +171,7 @@ int main()
     char com[255] = "";
     int pos = 0;
     Cube *c = CubeInit(nat, ngrid);
-
-    for (int i = 0; i < 3; ++i)
-    {
-      for (int j = 0; j < 3; ++j)
-      {
-        c->vsize[i][j] = celldm[i][j] / ngrid[i];
-      }
-    }
+    CubeSetVoxels(c, vsize);
 
     sprintf(fname, "dat/%s", files[file]);
     f = ReadDatHeader(fname, dummy);
