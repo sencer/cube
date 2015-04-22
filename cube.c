@@ -319,7 +319,7 @@ Cube *CubeRead(char* filename)
 
   Cube *cube   = CubeInit(nat, ngrid);
   memcpy(cube->origin, origin, sizeof(origin));
-  memcpy(cube->vsize, vsize, sizeof(vsize));
+  CubeSetVoxels(cube, vsize);
 
 
   //read nuclear positions of all atoms
