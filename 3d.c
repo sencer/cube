@@ -56,6 +56,14 @@ void VecShift(double pnt[3], double vec[3], double c)
   }
 }
 
+void VecScale(double v[3], double c)
+{
+  for (int i = 0; i < 3; ++i)
+  {
+    v[i] *= c;
+  }
+}
+
 // TODO Not really 3D.
 double WeightedAverage(double a, double b, double weight)
 {
