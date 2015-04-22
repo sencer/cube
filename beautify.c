@@ -38,5 +38,6 @@ int main(int argc, char *argv[])
   CubeBeautify(c, thr);
   if(trim) CubeTrim(&c, thr);
   CubeWrite(c, argv[argc - 1]);
+  CubeDelete(c);
   return 0;
 }
