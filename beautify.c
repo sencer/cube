@@ -7,7 +7,7 @@ void usage()
   printf("Usage:\n");
   printf(" beautify [-t threshold] [-trim] infile outfile\n");
   printf(" -t threshold: threshold for trimming and rotating\n");
-  printf(" -trim do not trim\n");
+  printf(" -notrim do not trim\n");
 }
 
 int main(int argc, char *argv[])
@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
   {
     for (i = 1; i < argc; ++i)
     {
-      if(strcmp(argv[i], "-trim") == 0)
+      if(strcmp(argv[i], "-notrim") == 0)
       {
         trim = 0;
       }
