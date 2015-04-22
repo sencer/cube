@@ -21,7 +21,7 @@ libcube.a:$(DEPS)
 	$(CC) $(CFLAGS) -c $<
 
 clean:
-	rm -f *.o $(EXEC)
+	rm -f *.o $(EXEC) libcube.a
 
 %.c: ;
 %.h: ;
