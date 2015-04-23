@@ -3,6 +3,7 @@
 #include "cube.h"
 #include "files.h"
 #include "3d.h"
+#include <unistd.h>
 
 #define THR 6.E-3
 
@@ -143,7 +144,7 @@ int main()
       dim,
       dummy[3],
       nfile = FilesList(files, "dat");
-  char fname[20];
+  char fname[20], cname[20];
 
   if(nfile < 1) return -1;
 
@@ -164,40 +165,44 @@ int main()
     VecScale(vsize[i], 1/ngrid[i]);
   }
 
-#pragma omp parallel for private(fname) shared(dummy)
+#pragma omp parallel for private(fname,cname) shared(dummy)
   for(int file = 0; file < nfile; ++file)
   {
-    FILE *f;
-    char com[255] = "";
-    int pos = 0;
-    Cube *c = CubeInit(nat, ngrid);
-    CubeSetVoxels(c, vsize);
-
-    sprintf(fname, "dat/%s", files[file]);
-    f = ReadDatHeader(fname, dummy);
-    ReadDatData(f, ngrid, dim, c);
-    GetAtoms(atoi(files[file]), c, nat, z, num);
-    for (int i = 0; i < c->nat; i++)
+    sprintf(cname, "cube/%d.cube", atoi(files[file]));
+    if (access(cname, F_OK) == -1)
     {
-      /* if(c->atoms[i].Z != 22) break; */
-      if(Coor2DataPnt(i, c, celldm, inv))
+      FILE *f;
+      char com[255] = "";
+      int pos = 0;
+      Cube *c = CubeInit(nat, ngrid);
+      CubeSetVoxels(c, vsize);
+
+      sprintf(fname, "dat/%s", files[file]);
+      f = ReadDatHeader(fname, dummy);
+      ReadDatData(f, ngrid, dim, c);
+      GetAtoms(atoi(files[file]), c, nat, z, num);
+      for (int i = 0; i < c->nat; i++)
       {
-        pos += sprintf(com + pos, "%d ", i);
+        /* if(c->atoms[i].Z != 22) break; */
+        if(Coor2DataPnt(i, c, celldm, inv))
+        {
+          pos += sprintf(com + pos, "%d ", i);
+        }
       }
+      CubeBeautify(c, THR);
+      CubeTrim(&c, THR);
+      sprintf(fname, "cube/%d.cube", atoi(files[file]));
+
+      sprintf(c->comment[0], "%-10.6f %-10.6f %-10.6f %-10.6f %-10.6f %-10.6f",
+          norm[0]*B2A, norm[1]*B2A, norm[2]*B2A,
+          DEG*acos(VecDot(celldm[0], celldm[2])/(norm[2]*norm[0])),
+          DEG*acos(VecDot(celldm[1], celldm[2])/(norm[1]*norm[2])),
+          DEG*acos(VecDot(celldm[0], celldm[1])/(norm[0]*norm[1])));
+
+      strcpy(c->comment[1], com);
+      CubeWrite(c, cname);
+      CubeDelete(c);
     }
-    CubeBeautify(c, THR);
-    CubeTrim(&c, THR);
-    sprintf(fname, "cube/%d.cube", atoi(files[file]));
-
-    sprintf(c->comment[0], "%-10.6f %-10.6f %-10.6f %-10.6f %-10.6f %-10.6f",
-        norm[0]*B2A, norm[1]*B2A, norm[2]*B2A,
-        DEG*acos(VecDot(celldm[0], celldm[2])/(norm[2]*norm[0])),
-        DEG*acos(VecDot(celldm[1], celldm[2])/(norm[1]*norm[2])),
-        DEG*acos(VecDot(celldm[0], celldm[1])/(norm[0]*norm[1])));
-
-    strcpy(c->comment[1], com);
-    CubeWrite(c, fname);
-    CubeDelete(c);
   }
   return 0;
 }
