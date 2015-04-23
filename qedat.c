@@ -162,7 +162,7 @@ int main()
   memcpy(vsize, celldm, sizeof(celldm));
   for(int i = 0; i < 3; ++i)
   {
-    VecScale(vsize[i], 1/ngrid[i]);
+    VecScale(vsize[i], 1.0/ngrid[i]);
   }
 
 #pragma omp parallel for private(fname,cname) shared(dummy)
