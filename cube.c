@@ -257,8 +257,8 @@ void CubeRotateLayers(Cube *cube, int dir, int n)
   double *data = malloc(CubeDataSize(cube) * sizeof(double));
   int i, j, k,
       dim = CubeDataSize(cube) / cube->ngrid[dir],
-      *d_index,
-      *c_index;
+      *d_index = NULL,
+      *c_index = NULL;
   for (i = 0; i < cube->ngrid[dir]; ++i)
   {
     k = i + n;
