@@ -55,7 +55,7 @@ void GetAtoms(int index, Cube *c, int nat, int *z, int *num)
 FILE *ReadDatHeader(char *fname, int *ngrid)
 {
   size_t len = 0;
-  char *line;
+  char *line = malloc(100 * sizeof(char));
   FILE *f = fopen(fname, "rb");
 
   getline(&line, &len, f);
@@ -66,13 +66,14 @@ FILE *ReadDatHeader(char *fname, int *ngrid)
   sscanf(line, "    <INFO nr1=\"%d\" nr2=\"%d\" nr3=\"%d\"/>",
       &ngrid[0], &ngrid[1], &ngrid[2]);
   getline(&line, &len, f);
+  free(line);
   return f;
 }
 
 void ReadDatData(FILE *f, int ngrid[3], int dim, Cube *c)
 {
   size_t len = 0;
-  char *line;
+  char *line = malloc(100 * sizeof(char));
   double *data = (double *) malloc(dim * sizeof(double));
   for (int i = 0; i < ngrid[2]; ++i)
   {
@@ -91,6 +92,7 @@ void ReadDatData(FILE *f, int ngrid[3], int dim, Cube *c)
       }
     }
   }
+  free(line);
   free(data);
   fclose(f);
 }
