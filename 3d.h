@@ -1,8 +1,6 @@
 #ifndef THREED_SIMPLE_MATH
 #define THREED_SIMPLE_MATH 123456
 
-#define MIN(a, b) ((a<b)?a:b)
-#define MAX(a, b) ((a>b)?a:b)
 #define DEG 57.2957795786
 #define B2A 0.529177249
 

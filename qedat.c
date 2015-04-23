@@ -97,8 +97,8 @@ void ReadDatData(FILE *f, int ngrid[3], int dim, Cube *c)
 
 double pAverageNN(Cube *c, int coor[3])
 {
-  int p[3] = { MAX(coor[0] - 1, 0), MAX(coor[1] - 1, 0), MAX(coor[2] - 1, 0) },
-      r[3] = { MIN(coor[0] + 1, c->ngrid[0]-1), MIN(coor[1] + 1, c->ngrid[1]-1), MIN(coor[2] + 1, c->ngrid[2]-1) },
+  int p[3] = { coor[0] - 1, coor[1] - 1, coor[2] - 1 },
+      r[3] = { coor[0] + 1, coor[1] + 1, coor[2] + 1 },
       dim, *ind = CubeRegionIndices(c, p, r);
 
   double av = 0;
