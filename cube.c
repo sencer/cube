@@ -471,4 +471,16 @@ Cube **CubeInterpolate(Cube *first, Cube *last, int n)
   return cubes;
 }
 
+void CubeWrapAtoms(Cube *c)
+{
+  for (int i = 0; i < c->nat; ++i)
+  {
+    for (int j = 0; j < 3; ++j)
+    {
+      VecShift(c->atoms[i].coor, c->vsize[j], -c->ngrid[j] *
+          floor(VecDot(c->invvsize[j], c->atoms[i].coor)/c->ngrid[j]));
+    }
+  }
+}
+
 // vim: foldmethod=syntax

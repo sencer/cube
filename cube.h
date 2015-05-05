@@ -59,6 +59,7 @@ void CubeTrim(Cube **c, double thr);
 Cube **CubeInterpolate(Cube *first, Cube *last, int n);
 double CubeLayerMax(Cube *c, int dir, int layer);
 
+void CubeWrapAtoms(Cube *c);
 #endif /* end of include guard: Cube_H_XTY81TBG */
 
 // vim: foldmethod=syntax
