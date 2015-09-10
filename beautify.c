@@ -5,7 +5,7 @@
 void usage()
 {
   printf("Usage:\n");
-  printf(" beautify [-t threshold] [-trim] infile outfile\n");
+  printf(" beautify [-t threshold] [-notrim] infile outfile\n");
   printf(" -t threshold: threshold for trimming and rotating\n");
   printf(" -notrim do not trim\n");
 }

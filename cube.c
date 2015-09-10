@@ -1,5 +1,7 @@
 #include "cube.h"
 
+// TODO CubeGetRegion etc should return only data
+
 Cube *CubeInit(int nat, int ngrid[3])
 {
   /* @brief Allocates the memory needed for a Cube
@@ -161,6 +163,47 @@ int *CubeRegionIndices(Cube *cube, int p[3], int r[3])
   return indices;
 }
 
+Cube *CubeSphericalRegion(Cube *c, int pos[3], double rad)
+{
+  int r[3], p[3],
+      d[3] = {
+        ceil(rad/c->vsize[0][0]),
+        ceil(rad/c->vsize[1][1]),
+        ceil(rad/c->vsize[2][2])
+      };
+
+  double v[3];
+
+  for (int i = 0; i < 3; ++i)
+  {
+    p[i] = pos[i] - d[i] + 1;
+    r[i] = pos[i] + d[i] - 1;
+  }
+
+  Cube *nc = CubeGetRegion(c, p, r);
+
+  for (int i = 0; i < d[0] * 2 - 1; ++i)
+  {
+    for (int j = 0; j < d[1] * 2 - 1; ++j)
+    {
+      for (int k = 0; k < d[2] * 2 - 1; ++k)
+      {
+        for (int l = 0; l < 3; ++l)
+        {
+          v[l] = (d[0] - i - 1) * c->vsize[0][l]
+               + (d[1] - j - 1) * c->vsize[1][l]
+               + (d[2] - k - 1) * c->vsize[2][l];
+        }
+        if(VecLen(v) > rad)
+        {
+          nc->data[nc->ngrid[2]*nc->ngrid[1]*i +nc->ngrid[2]*j + k] = 0;
+        }
+      }
+    }
+  }
+  return nc;
+}
+
 Cube *CubeGetRegion(Cube *cube, int p[3], int r[3])
 {
   /* @brief returns the Cube containing only the data contained in
@@ -168,7 +211,7 @@ Cube *CubeGetRegion(Cube *cube, int p[3], int r[3])
    * @p Cube *cube, the cube to get a region from
    * @p int p[3] 3D indices of one corner of the region
    * @p int r[3] 3D indices of one corner of the region
-   * @return Cube, with same atoms as *cube and a subset of the data.
+   * @return Cube with a subset of the data.
    */
   int *indices = CubeRegionIndices(cube, p, r),
       d[3] = { r[0] - p[0] + 1, r[1] - p[1] + 1, r[2] - p[2] + 1 },
@@ -201,11 +244,12 @@ void CubePutRegion(Cube *dest, Cube *source, int p[3])
    * @p int p[3] 3D indices of one corner of the region
    * @return void
    */
-  // TODO need to check if there is enough space in dest-above-p
   int dim = CubeDataSize(source),
-      r[3] = { p[0]+source->ngrid[0]-1,
+      r[3] = {
+        p[0]+source->ngrid[0]-1,
         p[1]+source->ngrid[1]-1,
-        p[2]+source->ngrid[2]-1 },
+        p[2]+source->ngrid[2]-1
+      },
       *indices = CubeRegionIndices(dest, p, r), i;
   for( i = 0; i < dim; i++ )
   {
@@ -326,19 +370,19 @@ Cube *CubeRead(char* filename)
   for (i = 0; i < cube->nat; ++i){
     fgets(line, L_LENGTH, f);
     sscanf(line, "%d %*f %lf %lf %lf", &(cube->atoms[i].Z),
-                                      &(cube->atoms[i].coor[0]),
-                                      &(cube->atoms[i].coor[1]),
-                                      &(cube->atoms[i].coor[2]));
+        &(cube->atoms[i].coor[0]),
+        &(cube->atoms[i].coor[1]),
+        &(cube->atoms[i].coor[2]));
   }
   //read grid data
   i = 0;
   while(fgets(line, L_LENGTH, f)){
     i += sscanf(line, "%lf %lf %lf %lf %lf %lf", &cube->data[i+0],
-                                                 &cube->data[i+1],
-                                                 &cube->data[i+2],
-                                                 &cube->data[i+3],
-                                                 &cube->data[i+4],
-                                                 &cube->data[i+5]);
+        &cube->data[i+1],
+        &cube->data[i+2],
+        &cube->data[i+3],
+        &cube->data[i+4],
+        &cube->data[i+5]);
   }
 
   fclose(f);
@@ -353,29 +397,29 @@ void CubeWrite(Cube *cube, char *filename)
   fprintf(f, "%s\n", cube->comment[1]);
 
   fprintf(f, "%-5d %12.6f %12.6f %12.6f\n", cube->nat,
-                                                cube->origin[0],
-                                                cube->origin[1],
-                                                cube->origin[2]);
+      cube->origin[0],
+      cube->origin[1],
+      cube->origin[2]);
 
   fprintf(f, "%-5d %12.6f %12.6f %12.6f\n", cube->ngrid[0],
-                                            cube->vsize[0][0],
-                                            cube->vsize[0][1],
-                                            cube->vsize[0][2]);
+      cube->vsize[0][0],
+      cube->vsize[0][1],
+      cube->vsize[0][2]);
   fprintf(f, "%-5d %12.6f %12.6f %12.6f\n", cube->ngrid[1],
-                                            cube->vsize[1][0],
-                                            cube->vsize[1][1],
-                                            cube->vsize[1][2]);
+      cube->vsize[1][0],
+      cube->vsize[1][1],
+      cube->vsize[1][2]);
   fprintf(f, "%-5d %12.6f %12.6f %12.6f\n", cube->ngrid[2],
-                                            cube->vsize[2][0],
-                                            cube->vsize[2][1],
-                                            cube->vsize[2][2]);
+      cube->vsize[2][0],
+      cube->vsize[2][1],
+      cube->vsize[2][2]);
   for (int i = 0; i < cube->nat; ++i)
   {
     fprintf(f, "%-3d %8.4f %14.10f %14.10f %14.10f\n", cube->atoms[i].Z,
-                                                       (float) cube->atoms[i].Z,
-                                                       cube->atoms[i].coor[0],
-                                                       cube->atoms[i].coor[1],
-                                                       cube->atoms[i].coor[2]);
+        (float) cube->atoms[i].Z,
+        cube->atoms[i].coor[0],
+        cube->atoms[i].coor[1],
+        cube->atoms[i].coor[2]);
   }
   int size = cube->ngrid[0] * cube->ngrid[1] * cube->ngrid[2];
   for (int i = 0; i < size; ++i)
@@ -469,6 +513,44 @@ Cube **CubeInterpolate(Cube *first, Cube *last, int n)
     }
   }
   return cubes;
+}
+
+void CubeR2BoxI(Cube *c, double r[3], int box[3])
+{
+
+  double coor[3];
+
+  CubeR2Box(c, r, coor);
+
+  for (int i = 0; i < 3; ++i)
+  {
+    box[i] = round(coor[i]);
+  }
+}
+
+void CubeR2Box(Cube *c, double r[3], double box[3])
+{
+
+  double coor[3];
+
+  for (int i = 0; i < 3; ++i)
+  {
+    coor[i] = r[i] - c->origin[i];
+  }
+
+  for(int i = 0; i < 3; ++i)
+  {
+    box[i] = VecDot(coor, c->invvsize[i]);
+  }
+}
+
+void CubeBox2R(Cube *c, double box[3], double r[3])
+{
+  for (int i = 0; i < 3; ++i)
+  {
+    VecShift(r, c->vsize[i], box[i]);
+  }
+  VecShift(r, c->origin, 1);
 }
 
 void CubeWrapAtoms(Cube *c)

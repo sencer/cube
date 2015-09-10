@@ -1,11 +1,11 @@
 #define _GNU_SOURCE
+#define THR 6.E-3
 
 #include "cube.h"
 #include "files.h"
 #include "3d.h"
 #include <unistd.h>
 
-#define THR 6.E-3
 
 void ReadInput(int *nat, int *ntyp, int *num, int *z, double celldm[3][3])
 {
@@ -97,46 +97,30 @@ void ReadDatData(FILE *f, int ngrid[3], int dim, Cube *c)
   fclose(f);
 }
 
-double pAverageNN(Cube *c, int coor[3])
+double Surround(int atom, Cube *c, double r, int flag)
 {
-  int p[3] = { coor[0] - 1, coor[1] - 1, coor[2] - 1 },
-      r[3] = { coor[0] + 1, coor[1] + 1, coor[2] + 1 },
-      dim, *ind = CubeRegionIndices(c, p, r);
-
-  double av = 0;
-  dim = (r[0]-p[0]+1)*(r[1]-p[1]+1)*(r[2]-p[2]+1);
-
-  for(int i = 0; i < dim; ++i)
+  int p[3], size;
+  CubeR2BoxI(c, c->atoms[atom].coor, p);
+  Cube *tmp = CubeSphericalRegion(c, p, r);
+  size = CubeDataSize(tmp);
+  double total = 0;
+  for (int i = 0; i < size; ++i)
   {
-    av += fabs(c->data[ind[i]]);
+    total += fabs(tmp->data[i]);
   }
-
-  free(ind);
-
-  return av / dim;
-}
-
-int Coor2DataPnt(int atom, Cube *c, double celldm[3][3], double inv[3][3])
-{
-  int coor[3];
-
-  for(int i = 0; i < 3; ++i)
+  if (flag)
   {
-    // TODO Fix for the cases where origin of the cube is not 0
-
-
-    VecShift(c->atoms[atom].coor, celldm[i],
-        -1 * floor(VecDot(c->atoms[atom].coor, inv[i])));
-
-    coor[i] = VecDot(c->atoms[atom].coor, inv[i]) * celldm[i][i]/c->vsize[i][i];
+    return total / size;
   }
-
-  return pAverageNN(c, coor) > THR ? 1: 0;
+  else
+  {
+    return total;
+  }
 }
 
 int main()
 {
-  char files[5000][11];
+  char files[5000][11], fname[20], cname[20];
   double celldm[3][3], inv[3][3], *norm, vsize[3][3];
   int nat = 0,
       ntyp = 0,
@@ -146,7 +130,6 @@ int main()
       dim,
       dummy[3],
       nfile = FilesList(files, "dat");
-  char fname[20], cname[20];
 
   if(nfile < 1) return -1;
 
@@ -167,7 +150,7 @@ int main()
     VecScale(vsize[i], 1.0/ngrid[i]);
   }
 
-#pragma omp parallel for private(fname,cname) shared(dummy)
+/* #pragma omp parallel for private(fname,cname) shared(dummy) */
   for(int file = 0; file < nfile; ++file)
   {
     sprintf(cname, "cube/%d.cube", atoi(files[file]));
@@ -176,6 +159,7 @@ int main()
       FILE *f;
       char com[255] = "";
       int pos = 0;
+      double rho, total = 0;
       Cube *c = CubeInit(nat, ngrid);
       CubeSetVoxels(c, vsize);
 
@@ -183,11 +167,18 @@ int main()
       f = ReadDatHeader(fname, dummy);
       ReadDatData(f, ngrid, dim, c);
       GetAtoms(atoi(files[file]), c, nat, z, num);
+      /* for (int i = 0; i < CubeDataSize(c); ++i) */
+      /* { */
+      /*   total += fabs(c->data[i]); */
+      /* } */
       for (int i = 0; i < c->nat; i++)
       {
         /* if(c->atoms[i].Z != 22) break; */
-        if(Coor2DataPnt(i, c, celldm, inv))
+        if(Surround(i, c, 0.4, 1) > THR)
         {
+          rho = Surround(i, c, 2.1, 0) ;
+          /* printf("%d %lf %lf\n", atoi(files[file]), c->atoms[i].coor[2], rho /total); */
+          printf("%d %lf %lf\n", atoi(files[file]), c->atoms[i].coor[2], rho);
           pos += sprintf(com + pos, "%d ", i);
         }
       }
