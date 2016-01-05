@@ -230,6 +230,7 @@ int main()
           DEG*acos(VecDot(celldm[0], celldm[1])/(norm[0]*norm[1])));
 
       strcpy(c->comment[1], com);
+      printf("%s %s", files[file], com);
       CubeWrite(c, cname);
       CubeDelete(c);
     }
