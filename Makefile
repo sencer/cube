@@ -1,27 +1,24 @@
-CC=gcc
-CFLAGS= -lm -Wall -pedantic -std=c99
-EXEC = beautify qedat interpolate
-DEPS = cube.o 3d.o files.o
+# CC             = clang-3.6
+CC             = gcc
+CFLAGS         = -std=c99
+EXEC           = beautify qedat #interpolate spherical average beautify2 testc test1
+DEPS           = cube.o 3d.o files.o
 
 .PHONY: all debug clean
+all:   CFLAGS += -O3 -Wno-unused-result -fopenmp
+debug: CFLAGS += -g -Wall -pedantic -fno-omit-frame-pointer -fsanitize=address
 
-all: CFLAGS += -fPIC -O3 -fopenmp
 all: $(EXEC)
-
-debug: CFLAGS += -g
 debug: $(EXEC)
 
-$(EXEC): % : %.c libcube.a
-	$(CC) $@.c -L. -lcube $(CFLAGS) -o $@
-
-libcube.a:$(DEPS)
-	ar rvs libcube.a $(DEPS)
+$(EXEC): % : %.c $(DEPS)
+	$(CC) $(CFLAGS) $@.c $(DEPS) -lm -o $@
 
 %.o:%.c cube.h
 	$(CC) $(CFLAGS) -c $<
 
 clean:
-	rm -f *.o $(EXEC) libcube.a
+	rm -f *.o $(EXEC)  cube.py* cube_wrap.* _cube.so
 
 %.c: ;
 %.h: ;
