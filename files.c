@@ -10,6 +10,14 @@ int hasExtension(char const *name, char const *ext)
   return ln > le && strcmp(name + ln - le, dotext) == 0;
 }
 
+int CompStrInt(const void *a, const void *b)
+{
+  int c, d;
+  c = atoi(a);
+  d = atoi(b);
+  return (c > d) - (c < d);
+}
+
 int FilesList(char files[5000][11], const char *ext)
 {
   DIR *directory = opendir(ext);
