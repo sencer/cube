@@ -557,11 +557,16 @@ void CubeWrapAtoms(Cube *c)
 {
   for (int i = 0; i < c->nat; ++i)
   {
+    VecShift(c->atoms[i].coor, c->origin, -1);
     for (int j = 0; j < 3; ++j)
     {
       VecShift(c->atoms[i].coor, c->vsize[j], -c->ngrid[j] *
           floor(VecDot(c->invvsize[j], c->atoms[i].coor)/c->ngrid[j]));
     }
+  }
+  for (int j = 0; j < 3; ++j)
+  {
+    c->origin[j] = 0;
   }
 }
 
